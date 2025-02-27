@@ -1,5 +1,6 @@
 meteor create --typescritp todo2etapa
 meteor npm i
+meteor npm i --save-dev @types/meteor
 meteor npm i @mui/material @emotion/react @emotion/styled
 meteor npm i @mui/icons-material
 meteor npm i react-route-dom@6.4.0

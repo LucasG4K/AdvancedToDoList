@@ -19,9 +19,10 @@ export const Auth = () => {
         email: '',
         profile: {
             name: '',
-            gender: 'other',
+            gender: 'male',
+            birthDate: new Date("2000-01-01"),
             avatar: '',
-            industry: '',
+            company: '',
         },
         createdAt: new Date(),
     });
@@ -50,16 +51,21 @@ export const Auth = () => {
 
         if (isLoggin) {
             if (!validate()) return;
-
             Meteor.loginWithPassword(userData.email, password);
         } else {
             if (!validate()) return;
 
-            await Meteor.callAsync('user.create', {
-                userData: userData,
-                password: password
-            });
+            try {
+                const userId = await Meteor.callAsync('user.create', userData, password);
+                if (userId)
+                    Meteor.loginWithPassword(userData.email, password);
+
+            } catch(e: any) {
+                alert(e.message);
+            }
         }
+        setPassword('');
+        setConfirmPassword('');
     };
 
     return (
@@ -73,40 +79,97 @@ export const Auth = () => {
                         {isLoggin ? 'Sign In' : 'Sign Up'}
                     </Typography>
                     <Box component='form' onSubmit={handleSubmit} noValidate sx={{ mt: 1 }} >
-                        {!isLoggin && <TextField label='Name' fullWidth required sx={{ mb: 2 }} />}
 
-                        <TextField label='Email' fullWidth required sx={{ mb: 2 }} />
+                        {/*NOME*/}
+                        {!isLoggin && (
+                            <TextField
+                                label='Name'
+                                name='name'
+                                fullWidth
+                                required
+                                value={userData.profile.name}
+                                onChange={handleChange}
+                                sx={{ mb: 2 }} />)}
 
-                        {!isLoggin && <TextField type='date' label='Birthdate' fullWidth required sx={{ mb: 2 }} InputLabelProps={{ shrink: true }} />}
+                        {/*EMAIL*/}
+                        <TextField
+                            label='Email'
+                            name='email'
+                            fullWidth
+                            required
+                            value={userData.email}
+                            onChange={handleChange}
+                            sx={{ mb: 2 }} />
 
+                        {/*DATA NASCIMENTO*/}
+                        {!isLoggin && (
+                            <TextField
+                                type='date'
+                                label='Birthdate'
+                                name='birthdate'
+                                fullWidth
+                                required
+                                // value={userData.profile.birthDate}
+                                // onChange={handleChange}
+                                sx={{ mb: 2 }}
+                                InputLabelProps={{ shrink: true }} />
+                        )}
+
+                        {/*GÊNERO*/}
                         {!isLoggin && (
                             <TextField
                                 select
                                 label="Gender"
                                 name="gender"
+                                fullWidth
                                 value={userData.profile.gender || "male"}
                                 onChange={handleChange}
-                                fullWidth
                                 required
                                 sx={{ mb: 2 }}
-                            >
-                                {["female", "male", "other"].map((op) => (
-                                    <MenuItem key={op} value={op}>
-                                        {op}
-                                    </MenuItem>
-                                ))}
+                            > {["female", "male", "other"].map((op) => (
+                                <MenuItem key={op} value={op}>
+                                    {op.charAt(0).toUpperCase() + op.slice(1)}
+                                </MenuItem>
+                            ))}
                             </TextField>
                         )}
 
-                        {!isLoggin && <TextField label='Company' fullWidth sx={{ mb: 2 }} />}
+                        {/*EMPRESA QUE TRABALHA*/}
+                        {!isLoggin && (
+                            <TextField
+                                label='Company'
+                                name='company'
+                                fullWidth
+                                value={userData.profile.company}
+                                onChange={handleChange}
+                                sx={{ mb: 2 }} />)}
 
-                        <TextField type='password' label='Password' fullWidth required sx={{ mb: 2 }} />
+                        {/*SENHA*/}
+                        <TextField
+                            type='password'
+                            label='Password'
+                            name='password'
+                            fullWidth
+                            required
+                            value={password}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)}
+                            sx={{ mb: 2 }} />
 
-                        {!isLoggin && <TextField type='password' label='Confirm Password' fullWidth required sx={{ mb: 2, outlineColor: color.terciary }} />}
+                        {/*CONFIRMA SENHA*/}
+                        {!isLoggin && (
+                            <TextField
+                                type='password'
+                                label='Confirm Password'
+                                name='confirm-password'
+                                fullWidth
+                                required
+                                value={confirmPassword}
+                                onChange={(event: ChangeEvent<HTMLInputElement>) => setConfirmPassword(event.target.value)}
+                                sx={{ mb: 2, outlineColor: color.terciary }} />)}
 
                         <Button type='submit' variant='contained' fullWidth sx={{ mt: 1 }}>{isLoggin ? 'Sign In' : 'Sign Up'}</Button>
                     </Box>
-                    <Link onClick={() => setIsLoggin(!isLoggin) } sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end', ml: 'auto', "&:hover": { cursor: 'pointer' } }}>
+                    <Link onClick={() => setIsLoggin(!isLoggin)} sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end', ml: 'auto', "&:hover": { cursor: 'pointer' } }}>
                         {isLoggin ? 'Sign Up' : 'Sign In'}
                     </Link>
                 </Paper>

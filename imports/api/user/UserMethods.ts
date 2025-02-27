@@ -1,23 +1,30 @@
 // Define métodos para atualizar perfil e permissões
 
 import { Meteor } from "meteor/meteor";
-import { Accounts } from 'meteor/accounts-base';
+import { Accounts } from "meteor/accounts-base";
 import { User, UserProfile } from "./UserTypes";
 
 Meteor.methods({
-
   "user.create"(userData: User, password: string) {
     if (!userData.email || !password) {
-      throw new Meteor.Error('invalid-arguments', 'Username, email, and password are required');
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Email and Password are required"
+      );
     }
 
-    const userId = Accounts.createUser({
-      email: userData.email,
-      password: password,
-      profile: userData.profile,
-    });
+    try {
+      const userId = Accounts.createUser({
+        username: userData.email.match(/^(.+)@[\w]+\.\w+$/)![1],
+        email: userData.email,
+        password: password,
+        profile: userData.profile,
+      });
 
-    return userId;
+      return userId;
+    } catch (error) {
+      throw new Meteor.Error('user-creation-failed', 'Failed to create user');
+    }
   },
 
   "user.update"(profile: UserProfile) {
