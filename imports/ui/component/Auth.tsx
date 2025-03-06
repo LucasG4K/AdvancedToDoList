@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useState } from 'react';
 import { Avatar, Box, Button, Container, Link, MenuItem, Paper, TextField, Typography } from '@mui/material';
 import { HttpsOutlined, PersonAddAltOutlined } from '@mui/icons-material';
-import { Colors } from './theme';
+import { Colors } from '../theme';
 import { User } from '/imports/api/user/UserTypes';
 import { Meteor } from 'meteor/meteor';
 

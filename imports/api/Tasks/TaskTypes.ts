@@ -6,10 +6,12 @@ export enum TaskStatus {
 
 export interface Task {
   _id: string;
-  userId?: string;
+  userId: string;
+  userName: string;
   title: string;
   description: string;
   status: TaskStatus;
+  private: boolean,
   lastModified: Date;
   createdAt: Date;
 }
