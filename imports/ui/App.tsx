@@ -16,16 +16,6 @@ export const App = () => {
   const user = useTracker(() => Meteor.user() as User);
   const isLoading = useSubscribe('tasks');
 
-  if (isLoading()) {
-    return (
-      <ThemeProvider theme={theme}>
-        <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-          <CircularProgress />
-        </Box>
-      </ThemeProvider>
-    );
-  }
-
   const tasks = useMemo(() => { // memo para não renderizar novamente (evita loop infinito)
     if (!isLoading()) {
       const tasks = TasksCollection.find(
@@ -42,21 +32,23 @@ export const App = () => {
       })
     }
     return [];
-  }, [isLoading, user]);
+  }, [user, isLoading]);
 
-  if (!user) {
+  if (isLoading()) {
     return (
       <ThemeProvider theme={theme}>
-        <Auth />;
+        <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+          <CircularProgress />
+        </Box>
       </ThemeProvider>
-    )
+    );
   }
 
   return (
     <ThemeProvider theme={theme}>
       <BrowserRouter>
         <Routes>
-          <Route path='/' element={<Home user={user} tasks={tasks} isLoading={isLoading()} />} />
+          <Route path='/' element={!user ? <Auth /> : <Home user={user} tasks={tasks} isLoading={isLoading()} />} />
           <Route path='todo-list' element={<TodoList user={user} tasks={tasks} isLoading={isLoading()} />} />
           <Route path='*' element={<Home user={user} tasks={tasks} isLoading={isLoading()} />} />
         </Routes>

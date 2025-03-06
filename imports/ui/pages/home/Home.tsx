@@ -42,7 +42,7 @@ export const Home = ({ user, tasks, isLoading }: HomeProps) => {
                 <Tasks>
                     <Typography variant="h6">TAREFAS</Typography>
                     <TodoTable actionsOn={false} tasks={tasks.slice(0, 3)} />
-                    <Button variant="contained" onClick={todoListNavigate} style={{ marginTop: '20px' }}>
+                    <Button variant="contained" onClick={todoListNavigate} sx={{ margin: '12px' }}>
                         Ver Mais
                     </Button>
                 </Tasks>

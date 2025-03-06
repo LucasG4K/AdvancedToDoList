@@ -8,26 +8,28 @@ interface ITodoTableProps {
 }
 
 const TodoTable: React.FC<ITodoTableProps> = React.memo(({ tasks, actionsOn }) => {
-    const getStatusColor = (status: TaskStatus): string => {
+    
+    const decodeStatus = (status: TaskStatus): string[] => { // status - cor
         switch (status) {
             case TaskStatus.COMPLETED:
-                return "green";
+                return ['COMPLETA', 'green'];
             case TaskStatus.IN_PROGRESS:
-                return "orange";
+                return ['EM ANDAMENTO', 'orange'];
             case TaskStatus.REGISTERED:
             default:
-                return "red";
+                return ['CADASTRADA', 'red'];
         }
     };
+
     return (
-        <TableContainer component={Paper} sx={{ width: "95%", margin: "auto", marginTop: 2 }}>
+        <TableContainer component={Paper} sx={{ width: '95%', margin: 'auto', marginTop: 2 }}>
             <Table>
                 <TableHead>
                     <TableRow>
                         <TableCell><strong>Título</strong></TableCell>
+                        <TableCell><strong>Usuário</strong></TableCell>
                         <TableCell><strong>Status</strong></TableCell>
                         <TableCell><strong>Última Modificação</strong></TableCell>
-                        <TableCell><strong>Usuário</strong></TableCell>
                         {actionsOn && <TableCell><strong>Ações</strong></TableCell>}
                     </TableRow>
                 </TableHead>
@@ -35,11 +37,11 @@ const TodoTable: React.FC<ITodoTableProps> = React.memo(({ tasks, actionsOn }) =
                     {tasks.map((task) => (
                         <TableRow key={task._id}>
                             <TableCell>{task.title}</TableCell>
-                            <TableCell sx={{ color: getStatusColor(task.status) }}>
-                                {task.status}
+                            <TableCell>{task.userName}</TableCell>
+                            <TableCell sx={{ color: decodeStatus(task.status)[1] }}>
+                                {decodeStatus(task.status)[0]}
                             </TableCell>
                             <TableCell>{new Date(task.lastModified).toLocaleString()}</TableCell>
-                            <TableCell>{task.userName}</TableCell>
                             {actionsOn && <TableCell><strong>Ações</strong></TableCell>}
                         </TableRow>
                     ))}

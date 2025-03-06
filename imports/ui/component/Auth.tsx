@@ -19,7 +19,7 @@ export const Auth = () => {
         email: '',
         profile: {
             name: '',
-            gender: 'male',
+            gender: '',
             birthDate: new Date("2000-01-01"),
             avatar: '',
             company: '',
@@ -60,7 +60,7 @@ export const Auth = () => {
                 if (userId)
                     Meteor.loginWithPassword(userData.email, password);
 
-            } catch(e: any) {
+            } catch (e: any) {
                 alert(e.message);
             }
         }
@@ -83,7 +83,7 @@ export const Auth = () => {
                         {/*NOME*/}
                         {!isLoggin && (
                             <TextField
-                                label='Name'
+                                label='Nome'
                                 name='name'
                                 fullWidth
                                 required
@@ -105,7 +105,7 @@ export const Auth = () => {
                         {!isLoggin && (
                             <TextField
                                 type='date'
-                                label='Birthdate'
+                                label='Data de Nascimento'
                                 name='birthdate'
                                 fullWidth
                                 required
@@ -119,16 +119,20 @@ export const Auth = () => {
                         {!isLoggin && (
                             <TextField
                                 select
-                                label="Gender"
+                                label="Gênero"
                                 name="gender"
                                 fullWidth
-                                value={userData.profile.gender || "male"}
+                                value={userData.profile.gender || ""}
                                 onChange={handleChange}
                                 required
                                 sx={{ mb: 2 }}
-                            > {["female", "male", "other"].map((op) => (
-                                <MenuItem key={op} value={op}>
-                                    {op.charAt(0).toUpperCase() + op.slice(1)}
+                            > {[
+                                { value: 'female', label: 'Feminino' },
+                                { value: 'male', label: 'Masculino' },
+                                { value: 'other', label: 'Outro' }
+                            ].map((op) => (
+                                <MenuItem key={op.value} value={op.value}>
+                                    {op.label}
                                 </MenuItem>
                             ))}
                             </TextField>
@@ -137,7 +141,7 @@ export const Auth = () => {
                         {/*EMPRESA QUE TRABALHA*/}
                         {!isLoggin && (
                             <TextField
-                                label='Company'
+                                label='Empresa'
                                 name='company'
                                 fullWidth
                                 value={userData.profile.company}
@@ -147,7 +151,7 @@ export const Auth = () => {
                         {/*SENHA*/}
                         <TextField
                             type='password'
-                            label='Password'
+                            label='Senha'
                             name='password'
                             fullWidth
                             required
@@ -159,7 +163,7 @@ export const Auth = () => {
                         {!isLoggin && (
                             <TextField
                                 type='password'
-                                label='Confirm Password'
+                                label='Confirmar Senha'
                                 name='confirm-password'
                                 fullWidth
                                 required
