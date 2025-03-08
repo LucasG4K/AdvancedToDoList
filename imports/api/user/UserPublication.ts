@@ -4,8 +4,12 @@ import { Meteor } from "meteor/meteor";
 
 Meteor.publish("users", function () {
   if (!this.userId) return this.ready();
-  return Meteor.users.find(
-    { _id: this.userId },
-    { fields: { username: 1, profile: 1 } } // 1 -> inclui os campos username e profile
+  return Meteor.users.find({}, {
+      fields: { // 1 -> inclui os campos
+        username: 1,
+        email: 1,
+        profile: 1,
+      },
+    } 
   );
 });

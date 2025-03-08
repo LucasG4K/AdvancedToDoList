@@ -1,8 +1,8 @@
 import React, { ChangeEvent, useState } from 'react';
 import { Avatar, Box, Button, Container, Link, MenuItem, Paper, TextField, Typography } from '@mui/material';
 import { HttpsOutlined, PersonAddAltOutlined } from '@mui/icons-material';
-import { Colors } from '../theme';
-import { User } from '/imports/api/user/UserTypes';
+import { Colors } from '../../theme';
+import { User } from '../../../api/User/UserTypes';
 import { Meteor } from 'meteor/meteor';
 
 
@@ -19,7 +19,6 @@ export const Auth = () => {
         email: '',
         profile: {
             name: '',
-            gender: '',
             birthDate: new Date("2000-01-01"),
             avatar: '',
             company: '',
@@ -71,7 +70,7 @@ export const Auth = () => {
     return (
         <div>
             <Container maxWidth='xs' >
-                <Paper elevation={10} sx={{ mt: 8, p: 2 }}> {/*mt=margin top, p=padding  ->   multiplicados por 8 em relação ao CSS*/}
+                <Paper elevation={10} sx={{ mt: 2, mb:2, p: 2, height: 'vh' }}> {/*mt=margin top, p=padding  ->   multiplicados por 8 em relação ao CSS*/}
                     <Avatar sx={{ mx: 'auto', bgcolor: color.primary, textAlign: 'center', mb: 1 }} >
                         {isLoggin ? <HttpsOutlined /> : <PersonAddAltOutlined />}
                     </Avatar>
