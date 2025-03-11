@@ -8,12 +8,12 @@ import { Meteor } from "meteor/meteor";
 import { useNavigate } from "react-router-dom";
 
 interface ITodoTableProps {
-    actionsOn: boolean;
+    detailedTable: boolean;
     userId?: string
     tasks: TaskModel[];
 }
 
-const TodoTable: React.FC<ITodoTableProps> = React.memo(({ tasks, userId, actionsOn }) => {
+const TodoTable: React.FC<ITodoTableProps> = React.memo(({ tasks, userId, detailedTable }) => {
 
     const [anchorEl, setAnchorEl] = useState<{ [key: string]: HTMLElement | null }>({});
 
@@ -65,30 +65,44 @@ const TodoTable: React.FC<ITodoTableProps> = React.memo(({ tasks, userId, action
 
     return (
         <TableContainer component={Paper} sx={{ width: '95%', margin: 'auto', marginTop: 2, overflowX: 'auto' }}>
-            <Table>
+            <Table >
                 <TableHead>
                     <TableRow>
                         <TableCell><strong>Título</strong></TableCell>
+                        <TableCell><strong>Descrição</strong></TableCell>
                         <TableCell><strong>Usuário</strong></TableCell>
                         <TableCell><strong>Status</strong></TableCell>
                         <TableCell><strong>Última Modificação</strong></TableCell>
-                        {actionsOn && <TableCell><strong>Ações</strong></TableCell>}
+                        {detailedTable && <TableCell><strong>Ações</strong></TableCell>}
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {tasks.map((task) => (
                         <TableRow key={task._id}>
                             <TableCell>{task.title}</TableCell>
+                            <TableCell>
+                                <Box
+                                    sx={{
+                                        width: '200px',
+                                        whiteSpace: detailedTable ? '' : 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis'
+                                    }}
+                                >
+                                    {task.description}
+                                </Box>
+                            </TableCell>
                             <TableCell>{task.userName}</TableCell>
                             <TableCell>
                                 <Box
                                     sx={{
+                                        width: '190px',
                                         color: decodeStatus(task.status)[1],
                                         cursor: "pointer",
                                         border: "1px solid gray",
-                                        borderRadius: "16px",
-                                        padding: "6px 12px",
-                                        display: "flex",
+                                        padding: "2px",
+                                        borderRadius: "8px",
+                                        display: "inline-flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                         gap: 1,  // Espaçamento entre ícone e texto
@@ -108,7 +122,7 @@ const TodoTable: React.FC<ITodoTableProps> = React.memo(({ tasks, userId, action
                                 onClose={() => handleCloseMenu(task._id)}
                             >
                                 {getNextStatusOptions(task.status).map((newStatus) => (
-                                    <MenuItem key={newStatus} onClick={() => handleChangeStatus(task._id, newStatus)} sx={{ width: '100%' }}>
+                                    <MenuItem dense key={newStatus} onClick={() => handleChangeStatus(task._id, newStatus)} sx={{ width: '100%' }}>
                                         <Circle sx={{ verticalAlign: "middle", fontSize: "14px", color: decodeStatus(newStatus)[1], m: 1, }} />
                                         {decodeStatus(newStatus)[0]}
                                     </MenuItem>
@@ -123,7 +137,7 @@ const TodoTable: React.FC<ITodoTableProps> = React.memo(({ tasks, userId, action
                                     minute: '2-digit',
                                 })}
                             </TableCell>
-                            {actionsOn && (
+                            {detailedTable && (
                                 <TableCell>
                                     <Box sx={{ display: 'flex', justifyContent: 'center' }}>
 

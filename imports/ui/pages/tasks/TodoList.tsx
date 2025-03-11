@@ -4,7 +4,7 @@ import { MyAppBar } from "../../component/myAppBar";
 import { User } from "../../../api/User/UserTypes";
 import { TodoTable } from "./components/todoTable";
 import { TaskModel } from "/imports/api/Tasks/TaskTypes";
-import { AddCircleOutlineOutlined } from "@mui/icons-material";
+import { AddCircleOutlineOutlined, ArrowBackOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
 interface ITodoList {
@@ -28,7 +28,14 @@ const TodoList: React.FC<ITodoList> = ({ user, tasks, isLoading }) => {
     return (
         <Box>
             <MyAppBar user={user} title='TAREFAS' />
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', m: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', m: 2 }}>
+                <Button
+                    startIcon={<ArrowBackOutlined />}
+                    sx={{ color: 'black' }}
+                    onClick={() => navigate(-1)}
+                >
+                    Voltar
+                </Button>
                 <Button
                     startIcon={<AddCircleOutlineOutlined />}
                     sx={{ color: 'black' }}
@@ -37,7 +44,7 @@ const TodoList: React.FC<ITodoList> = ({ user, tasks, isLoading }) => {
                     Nova Tarefa
                 </Button>
             </Box>
-            <TodoTable actionsOn={true} userId={user._id} tasks={tasks} />
+            <TodoTable detailedTable={true} userId={user._id} tasks={tasks} />
         </Box>
     )
 }

@@ -42,12 +42,10 @@ export const App = () => {
 
   const tasks = useTracker(() => {
     // if (isLoading() || isLoadingUser()) return [];
-    const tasksData = TasksCollection.find(
+    return TasksCollection.find(
       { $or: [{ private: false }, { userId: user?._id }] },
       { sort: { createdAt: -1 } }
-    ).fetch();
-    console.log("Tasks loaded:", tasksData);
-    return tasksData.map(task => {
+    ).fetch().map(task => {
       const taskUser = Meteor.users.findOne(task.userId) || null;
       return {
         ...task,
