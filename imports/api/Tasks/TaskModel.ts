@@ -5,9 +5,9 @@ export enum TaskStatusModel {
 }
 
 export interface TaskModel {
-  _id: string;
-  userId: string;
-  userName: string;
+  _id?: string;
+  userId?: string;
+  userName?: string;
   title: string;
   description: string;
   status: TaskStatusModel;

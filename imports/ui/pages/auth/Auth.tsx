@@ -1,27 +1,29 @@
 import React, { ChangeEvent, useState } from 'react';
 import { Avatar, Box, Button, Container, Link, MenuItem, Paper, TextField, Typography } from '@mui/material';
 import { HttpsOutlined, PersonAddAltOutlined } from '@mui/icons-material';
-import { Colors } from '../../theme';
-import { User } from '../../../api/User/UserTypes';
+import { Colors } from '../../themes/defaultTheme';
+import { UserModel } from '../../../api/User/UserModel';
 import { Meteor } from 'meteor/meteor';
 
 
 export const Auth = () => {
 
-    const [isLoggin, setIsLoggin] = useState<Boolean>(true);
+    const [isLogin, setIsLogin] = useState<Boolean>(true);
     const color: Colors = new Colors;
 
     const [password, setPassword] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState<string>('');
 
-    const [userData, setUserData] = useState<User>({
+    const [userData, setUserData] = useState<UserModel>({
         _id: '',
         email: '',
+        username: '',
         profile: {
             name: '',
             birthDate: new Date("2000-01-01"),
             avatar: '',
             company: '',
+            gender: 'other'
         },
         createdAt: new Date(),
     });
@@ -48,7 +50,7 @@ export const Auth = () => {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        if (isLoggin) {
+        if (isLogin) {
             if (!validate()) return;
             Meteor.loginWithPassword(userData.email, password);
         } else {
@@ -72,15 +74,15 @@ export const Auth = () => {
             <Container maxWidth='xs' >
                 <Paper elevation={10} sx={{ mt: 2, mb:2, p: 2, height: 'vh' }}> {/*mt=margin top, p=padding  ->   multiplicados por 8 em relação ao CSS*/}
                     <Avatar sx={{ mx: 'auto', bgcolor: color.primary, textAlign: 'center', mb: 1 }} >
-                        {isLoggin ? <HttpsOutlined /> : <PersonAddAltOutlined />}
+                        {isLogin ? <HttpsOutlined /> : <PersonAddAltOutlined />}
                     </Avatar>
                     <Typography component='h1' variant='h5' sx={{ textAlign: 'center' }} >
-                        {isLoggin ? 'Sign In' : 'Sign Up'}
+                        {isLogin ? 'Sign In' : 'Sign Up'}
                     </Typography>
                     <Box component='form' onSubmit={handleSubmit} noValidate sx={{ mt: 1 }} >
 
                         {/*NOME*/}
-                        {!isLoggin && (
+                        {!isLogin && (
                             <TextField
                                 label='Nome'
                                 name='name'
@@ -101,7 +103,7 @@ export const Auth = () => {
                             sx={{ mb: 2 }} />
 
                         {/*DATA NASCIMENTO*/}
-                        {!isLoggin && (
+                        {!isLogin && (
                             <TextField
                                 type='date'
                                 label='Data de Nascimento'
@@ -115,7 +117,7 @@ export const Auth = () => {
                         )}
 
                         {/*GÊNERO*/}
-                        {!isLoggin && (
+                        {!isLogin && (
                             <TextField
                                 select
                                 label="Gênero"
@@ -138,7 +140,7 @@ export const Auth = () => {
                         )}
 
                         {/*EMPRESA QUE TRABALHA*/}
-                        {!isLoggin && (
+                        {!isLogin && (
                             <TextField
                                 label='Empresa'
                                 name='company'
@@ -159,7 +161,7 @@ export const Auth = () => {
                             sx={{ mb: 2 }} />
 
                         {/*CONFIRMA SENHA*/}
-                        {!isLoggin && (
+                        {!isLogin && (
                             <TextField
                                 type='password'
                                 label='Confirmar Senha'
@@ -170,10 +172,10 @@ export const Auth = () => {
                                 onChange={(event: ChangeEvent<HTMLInputElement>) => setConfirmPassword(event.target.value)}
                                 sx={{ mb: 2, outlineColor: color.terciary }} />)}
 
-                        <Button type='submit' variant='contained' fullWidth sx={{ mt: 1 }}>{isLoggin ? 'Sign In' : 'Sign Up'}</Button>
+                        <Button type='submit' variant='contained' fullWidth sx={{ mt: 1 }}>{isLogin ? 'Sign In' : 'Sign Up'}</Button>
                     </Box>
-                    <Link onClick={() => setIsLoggin(!isLoggin)} sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end', ml: 'auto', "&:hover": { cursor: 'pointer' } }}>
-                        {isLoggin ? 'Sign Up' : 'Sign In'}
+                    <Link onClick={() => setIsLogin(!isLogin)} sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end', ml: 'auto', "&:hover": { cursor: 'pointer' } }}>
+                        {isLogin ? 'Sign Up' : 'Sign In'}
                     </Link>
                 </Paper>
             </Container>

@@ -8,15 +8,15 @@ export class Colors {
 
 const colors = new Colors();
 
-const theme = createTheme({
+const DefaultTheme = createTheme({
   palette: {
     primary: {
-      main: colors.primary, // Cor principal
+      main: colors.primary,
     },
     secondary: {
-      main: colors.secondary, // Cor secundária
+      main: colors.secondary,
     },
   },
 });
 
-export default theme;
+export default DefaultTheme;

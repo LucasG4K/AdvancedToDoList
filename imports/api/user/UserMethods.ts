@@ -2,10 +2,10 @@
 
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
-import { User, UserProfile } from "./UserTypes";
+import { UserModel, UserProfile } from "./UserModel";
 
 Meteor.methods({
-  "user.create"(userData: User, password: string) {
+  "user.create"(userData: UserModel, password: string) {
     if (!userData.email || !password) {
       throw new Meteor.Error(
         "invalid-arguments",

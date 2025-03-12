@@ -3,13 +3,6 @@
 import { Meteor } from "meteor/meteor";
 
 Meteor.publish("users", function () {
-  if (!this.userId) return this.ready();
-  return Meteor.users.find({}, {
-      fields: { // 1 -> inclui os campos
-        username: 1,
-        email: 1,
-        profile: 1,
-      },
-    } 
-  );
+  if (!this.userId) throw new Meteor.Error("not-authorized");
+  return Meteor.users.find();
 });

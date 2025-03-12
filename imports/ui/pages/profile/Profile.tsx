@@ -1,19 +1,24 @@
 import React from "react";
-import { User } from "../../../api/User/UserTypes";
-import { Box } from "@mui/material";
-import { MyAppBar } from "../../component/myAppBar";
+import { Box, Typography } from "@mui/material";
+import { MyAppBar } from "../../components/myAppBar";
+import { useUser } from "../../../providers/userProvider";
 
-interface IProfileProps {
-    user: User;
-}
+const Profile: React.FC = () => {
+    const { user } = useUser();
 
-const Profile: React.FC<IProfileProps> = ({ user }) => {
+    if (!user) {
+        return <Typography>Carregando...</Typography>;
+    }
+
     return (
         <Box>
-            <MyAppBar user={user} title='PERFIL' />
-
+            <MyAppBar user={user} title="PERFIL" />
+            <Box p={3}>
+                <Typography variant="h5">Nome: {user.username}</Typography>
+                <Typography variant="body1">E-mail: {user.email || "Não informado"}</Typography>
+            </Box>
         </Box>
     );
-}
+};
 
-export { Profile }
+export { Profile };

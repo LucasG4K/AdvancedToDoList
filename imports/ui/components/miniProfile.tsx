@@ -1,5 +1,5 @@
 import { Avatar, Box, Typography } from "@mui/material"
-import { User } from "../../api/User/UserTypes";
+import { User } from "../../api/User/UserModel";
 import React from "react";
 
 interface IMiniProfileProps {

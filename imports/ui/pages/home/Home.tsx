@@ -2,19 +2,16 @@ import React from 'react';
 import { HomeScreen, Overview, Tasks } from './homeStyles';
 import { CardOverview } from './components/cardOverview/cardOverview';
 import { useNavigate } from 'react-router-dom';
-import { User } from '../../../api/User/UserTypes';
-import { MyAppBar } from '../../component/myAppBar';
+import { MyAppBar } from '../../components/myAppBar';
 import { Button, Typography, Box, CircularProgress } from '@mui/material';
-import { TodoTable } from '../tasks/components/todoTable';
-import { TaskModel } from '/imports/api/Tasks/TaskTypes';
+import { TasksTable } from '../tasks/components/tasksTable';
+import { useUser } from '/imports/providers/userProvider';
+import { useTasks } from '/imports/providers/taskProvider';
 
-interface HomeProps {
-    user: User;
-    tasks: TaskModel[];
-    isLoading: boolean;
-}
 
-export const Home = ({ user, tasks, isLoading }: HomeProps) => {
+export const Home = () => {
+    const { user } = useUser();
+    const { countTasks, isLoading,  } = useTasks();
     const navigate = useNavigate();
     const todoListNavigate = () => navigate('/todo-list');
 
@@ -26,22 +23,18 @@ export const Home = ({ user, tasks, isLoading }: HomeProps) => {
         );
     }
 
-    const registeredTasksCount = tasks.filter((task: TaskModel) => task.status === 'REGISTERED').length;
-    const inProgressTasksCount = tasks.filter((task: TaskModel) => task.status === 'IN_PROGRESS').length;
-    const completedTasksCount = tasks.filter((task: TaskModel) => task.status === 'COMPLETED').length;
-
     return (
         <>
-            <MyAppBar user={user} title={`Olá, ${user.profile.name}`} />
+            <MyAppBar user={user} title={`Olá, ${user?.profile.name}`} />
             <HomeScreen>
                 <Overview>
-                    <CardOverview title="TAREFAS CADASTRADAS" value={registeredTasksCount} />
-                    <CardOverview title="TAREFAS EM ANDAMENTO" value={inProgressTasksCount} />
-                    <CardOverview title="TAREFAS CONCLUÍDAS" value={completedTasksCount} />
+                    <CardOverview title="TAREFAS CADASTRADAS" value={countTasks.registered} />
+                    <CardOverview title="TAREFAS EM ANDAMENTO" value={countTasks.inProgress} />
+                    <CardOverview title="TAREFAS CONCLUÍDAS" value={countTasks.completed} />
                 </Overview>
                 <Tasks>
                     <Typography variant="h6">TAREFAS</Typography>
-                    <TodoTable detailedTable={false} tasks={tasks.slice(0, 3)} />
+                    <TasksTable detailedTable={false} />
                     <Button variant="contained" onClick={todoListNavigate} sx={{ margin: '12px' }}>
                         Ver Mais
                     </Button>
