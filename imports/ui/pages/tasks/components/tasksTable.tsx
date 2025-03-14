@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, IconButton, TablePagination } from "@mui/material";
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { useTasks } from "/imports/providers/taskProvider";
 import { useNavigate } from "react-router-dom";
 import ChangeStatus from "./changeStatus";
+import MyDialog from "/imports/ui/components/myDialog";
 
 interface ITasksTableProps {
     detailedTable: boolean;
@@ -13,8 +14,23 @@ interface ITasksTableProps {
 
 const TasksTable: React.FC<ITasksTableProps> = React.memo(({ userId, detailedTable }) => {
 
-    const { tasks, page, totalPages, setPage } = useTasks();
+    const { tasks, page, totalPages, setPage, handleDeleteTask } = useTasks();
     const editTaskNavigate = useNavigate();
+
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+    const handleOpenDialog = (_id: string) => {
+        setSelectedTaskId(_id);
+        setDialogOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        handleDeleteTask(selectedTaskId!)
+        setDialogOpen(false);
+    };
+
+    if (!detailedTable) setPage(1);
 
     return (
         <TableContainer component={Paper} sx={{ width: '95%', margin: 'auto', marginTop: 2, overflowX: 'auto' }}>
@@ -63,9 +79,16 @@ const TasksTable: React.FC<ITasksTableProps> = React.memo(({ userId, detailedTab
                                         <IconButton onClick={() => editTaskNavigate(`/todo-list/edit/${task._id}`)} disabled={task.userId !== userId} sx={{ color: 'green' }}>
                                             <EditOutlinedIcon />
                                         </IconButton>
-                                        <IconButton onClick={() => console.log('excluir tarefa')} disabled={task.userId !== userId} sx={{ color: 'red' }}>
+                                        <IconButton onClick={() => handleOpenDialog(task._id!)} disabled={task.userId !== userId} sx={{ color: 'red' }}>
                                             <DeleteOutlineOutlinedIcon />
                                         </IconButton>
+                                        <MyDialog
+                                            open={dialogOpen}
+                                            title="Confirmação"
+                                            message="Deseja realmente deletar esta tarefa?"
+                                            onClose={() => setDialogOpen(false)}
+                                            onConfirm={handleConfirmDelete}
+                                        />
                                     </Box>
                                 </TableCell>
                             )}
@@ -77,11 +100,13 @@ const TasksTable: React.FC<ITasksTableProps> = React.memo(({ userId, detailedTab
                 <TablePagination
                     component="div"
                     count={totalPages * 4}
-                    page={page - 1} // Material-UI usa index 0
+                    page={page - 1}
                     onPageChange={(_, newPage) => setPage(newPage + 1)}
                     rowsPerPage={4}
-                    rowsPerPageOptions={[4]} // Fixa em 4 por página
-                />}
+                    rowsPerPageOptions={[4]}
+                    labelDisplayedRows={({ page }) => `${totalPages > 0 ? page + 1 : page} de ${totalPages}`}
+                />
+            }
         </TableContainer>
     );
 });

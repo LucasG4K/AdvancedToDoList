@@ -10,14 +10,25 @@ import { useUser } from '../providers/userProvider';
 export const AppRoutes = () => {
     const { user } = useUser();
 
-    return (
-        <Routes>
-            <Route path="/" element={!user ? <Auth /> : <Home />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/todo-list" element={<TodoList />} />
-            <Route path="/todo-list/edit/:id" element={<Task editing={true} />} />
-            <Route path="/todo-list/new-task" element={<Task editing={false} />} />
-            <Route path="*" element={<Home />} />
-        </Routes>
-    );
+    if (user) {
+        return (
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/todo-list" element={<TodoList />} />
+                <Route path="/todo-list/edit/:id" element={<Task editing={true} />} />
+                <Route path="/todo-list/new-task" element={<Task editing={false} />} />
+                <Route path="*" element={<Home />} />
+            </Routes>
+        );
+    } else {
+        return (
+            <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="*" element={<Auth />} />
+            </Routes>
+        );
+        
+    }
 };
+

@@ -1,8 +1,8 @@
 import React from "react";
-import { Box, Button, CircularProgress } from "@mui/material";
+import { Box, Button, CircularProgress, InputAdornment, Menu, TextField } from "@mui/material";
 import { MyAppBar } from "../../components/myAppBar";
 import { TasksTable } from "./components/tasksTable";
-import { AddCircleOutlineOutlined, ArrowBackOutlined } from "@mui/icons-material";
+import { AddCircleOutlineOutlined, ArrowBackOutlined, SearchOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../../providers/userProvider";
 import { useTasks } from "../../../providers/taskProvider";
@@ -21,7 +21,7 @@ const TodoList: React.FC = () => {
     }
 
     return (
-        <Box>
+        <>
             <MyAppBar user={user!} title="TAREFAS" />
             <Box sx={{ display: "flex", justifyContent: "space-between", m: 2 }}>
                 <Button
@@ -39,8 +39,18 @@ const TodoList: React.FC = () => {
                     Nova Tarefa
                 </Button>
             </Box>
+            <Box sx={{display: 'flex', justifyContent: 'center', width: '50vw', mx:'auto'}}>
+                <TextField fullWidth label={'Pesquisar Tarefa'} InputProps={{
+                    startAdornment: (<InputAdornment position="start">
+                        <SearchOutlined />
+                    </InputAdornment>)
+                }} />
+                <Menu open={false}>
+                    
+                </Menu>
+            </Box>
             <TasksTable detailedTable={true} userId={user!._id} />
-        </Box>
+        </>
     );
 };
 

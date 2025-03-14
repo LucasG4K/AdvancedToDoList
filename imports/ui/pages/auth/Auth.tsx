@@ -3,10 +3,12 @@ import { Avatar, Box, Button, Container, Link, MenuItem, Paper, TextField, Typog
 import { HttpsOutlined, PersonAddAltOutlined } from '@mui/icons-material';
 import { Colors } from '../../themes/defaultTheme';
 import { UserModel } from '../../../api/User/UserModel';
-import { Meteor } from 'meteor/meteor';
+import { useUser } from '/imports/providers/userProvider';
 
 
 export const Auth = () => {
+
+    const { handleLogin, handleSignUp } = useUser()
 
     const [isLogin, setIsLogin] = useState<Boolean>(true);
     const color: Colors = new Colors;
@@ -20,13 +22,13 @@ export const Auth = () => {
         username: '',
         profile: {
             name: '',
-            birthDate: new Date("2000-01-01"),
+            birthDate: new Date(),
             avatar: '',
             company: '',
             gender: 'other'
         },
         createdAt: new Date(),
-    });
+    } as UserModel);
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
         if (event.target.name in userData.profile) {
@@ -45,140 +47,224 @@ export const Auth = () => {
         }
     }
 
-    const validate = () => { return true; }
+    const validate = (): { [key: string]: string } => {
+        const errors: { [key: string]: string } = {};
+    
+        // Validação de email (regex simples)
+        const emailRegex = /^(.+)@[\w]+\.\w+$/;
+        if (!emailRegex.test(userData.email)) {
+            errors.email = 'Email inválido.';
+        }
+    
+        // Validação de senha (mínimo 6 caracteres)
+        if (!isLogin && password.length < 6) {
+            errors.password = 'A senha deve ter pelo menos 6 caracteres.';
+        }
+    
+        // Validação de confirmação de senha
+        if (!isLogin && password !== confirmPassword) {
+            errors.confirmPassword = 'As senhas não coincidem.';
+        }
+    
+        // Validação de nome (obrigatório no cadastro)
+        if (!isLogin && !userData.profile.name) {
+            errors.name = 'O nome é obrigatório.';
+        }
+    
+        // Validação de nascimento (opcional, mas você pode adicionar algum critério)
+        if (!isLogin && !userData.profile.birthDate) {
+            errors.birthDate = 'A data de nascimento é obrigatória.';
+        }
+    
+        // Validação de empresa (obrigatório no cadastro)
+        if (!isLogin && !userData.profile.company) {
+            errors.company = 'A empresa é obrigatória.';
+        }
+    
+        // Validação de gênero (obrigatório no cadastro)
+        if (!isLogin && userData.profile.gender === 'other') {
+            errors.gender = 'Selecione um gênero.';
+        }
+    
+        return errors;
+    }
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-
+        
+        const validationErrors = validate();
+        
+        // Se houver erros, mostrar na interface e impedir o envio do formulário
+        if (Object.keys(validationErrors).length > 0) {
+            // Exibir os erros como mensagem
+            for (const error in validationErrors) {
+                alert(validationErrors[error]);
+            }
+            return;
+        }
+    
         if (isLogin) {
-            if (!validate()) return;
-            Meteor.loginWithPassword(userData.email, password);
-        } else {
-            if (!validate()) return;
-
             try {
-                const userId = await Meteor.callAsync('user.create', userData, password);
-                if (userId)
-                    Meteor.loginWithPassword(userData.email, password);
-
-            } catch (e: any) {
-                alert(e.message);
+                await handleLogin(userData.email, password);
+            } catch (error) {
+                if (error instanceof Error) {
+                    alert(error.message);
+                }
+            }
+        } else {
+            try {
+                await handleSignUp(userData, password);
+                await handleLogin(userData.email, password);
+            } catch (error) {
+                if (error instanceof Error) {
+                    alert(error.message);
+                }
             }
         }
+    
         setPassword('');
         setConfirmPassword('');
     };
+    
 
     return (
         <div>
-            <Container maxWidth='xs' >
-                <Paper elevation={10} sx={{ mt: 2, mb:2, p: 2, height: 'vh' }}> {/*mt=margin top, p=padding  ->   multiplicados por 8 em relação ao CSS*/}
-                    <Avatar sx={{ mx: 'auto', bgcolor: color.primary, textAlign: 'center', mb: 1 }} >
+            <Container maxWidth="xs">
+                <Paper elevation={10} sx={{ mt: 2, mb: 2, p: 2, height: 'vh' }}>
+                    <Avatar sx={{ mx: 'auto', bgcolor: color.primary, textAlign: 'center', mb: 1 }}>
                         {isLogin ? <HttpsOutlined /> : <PersonAddAltOutlined />}
                     </Avatar>
-                    <Typography component='h1' variant='h5' sx={{ textAlign: 'center' }} >
+                    <Typography component="h1" variant="h5" sx={{ textAlign: 'center' }}>
                         {isLogin ? 'Sign In' : 'Sign Up'}
                     </Typography>
-                    <Box component='form' onSubmit={handleSubmit} noValidate sx={{ mt: 1 }} >
+                    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
 
-                        {/*NOME*/}
+                        {/* NOME */}
                         {!isLogin && (
                             <TextField
-                                label='Nome'
-                                name='name'
+                                error={!!validate().name}
+                                helperText={validate().name || ''}
+                                label="Nome"
+                                name="name"
                                 fullWidth
                                 required
                                 value={userData.profile.name}
                                 onChange={handleChange}
-                                sx={{ mb: 2 }} />)}
+                                sx={{ mb: 2 }}
+                            />
+                        )}
 
-                        {/*EMAIL*/}
+                        {/* EMAIL */}
                         <TextField
-                            label='Email'
-                            name='email'
+                            error={!!validate().email}
+                            helperText={validate().email || ''}
+                            label="Email"
+                            name="email"
                             fullWidth
                             required
                             value={userData.email}
                             onChange={handleChange}
-                            sx={{ mb: 2 }} />
+                            sx={{ mb: 2 }}
+                        />
 
-                        {/*DATA NASCIMENTO*/}
-                        {!isLogin && (
-                            <TextField
-                                type='date'
-                                label='Data de Nascimento'
-                                name='birthdate'
-                                fullWidth
-                                required
-                                // value={userData.profile.birthDate}
-                                // onChange={handleChange}
-                                sx={{ mb: 2 }}
-                                InputLabelProps={{ shrink: true }} />
-                        )}
-
-                        {/*GÊNERO*/}
-                        {!isLogin && (
-                            <TextField
-                                select
-                                label="Gênero"
-                                name="gender"
-                                fullWidth
-                                value={userData.profile.gender || ""}
-                                onChange={handleChange}
-                                required
-                                sx={{ mb: 2 }}
-                            > {[
-                                { value: 'female', label: 'Feminino' },
-                                { value: 'male', label: 'Masculino' },
-                                { value: 'other', label: 'Outro' }
-                            ].map((op) => (
-                                <MenuItem key={op.value} value={op.value}>
-                                    {op.label}
-                                </MenuItem>
-                            ))}
-                            </TextField>
-                        )}
-
-                        {/*EMPRESA QUE TRABALHA*/}
-                        {!isLogin && (
-                            <TextField
-                                label='Empresa'
-                                name='company'
-                                fullWidth
-                                value={userData.profile.company}
-                                onChange={handleChange}
-                                sx={{ mb: 2 }} />)}
-
-                        {/*SENHA*/}
+                        {/* SENHA */}
                         <TextField
-                            type='password'
-                            label='Senha'
-                            name='password'
+                            error={!!validate().password}
+                            helperText={validate().password || ''}
+                            type="password"
+                            label="Senha"
+                            name="password"
                             fullWidth
                             required
                             value={password}
                             onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)}
-                            sx={{ mb: 2 }} />
+                            sx={{ mb: 2 }}
+                        />
 
-                        {/*CONFIRMA SENHA*/}
+                        {/* CONFIRMAR SENHA */}
                         {!isLogin && (
                             <TextField
-                                type='password'
-                                label='Confirmar Senha'
-                                name='confirm-password'
+                                error={!!validate().confirmPassword}
+                                helperText={validate().confirmPassword || ''}
+                                type="password"
+                                label="Confirmar Senha"
+                                name="confirmPassword"
                                 fullWidth
                                 required
                                 value={confirmPassword}
                                 onChange={(event: ChangeEvent<HTMLInputElement>) => setConfirmPassword(event.target.value)}
-                                sx={{ mb: 2, outlineColor: color.terciary }} />)}
+                                sx={{ mb: 2 }}
+                            />
+                        )}
 
-                        <Button type='submit' variant='contained' fullWidth sx={{ mt: 1 }}>{isLogin ? 'Sign In' : 'Sign Up'}</Button>
+                        {/* DATA DE NASCIMENTO */}
+                        {!isLogin && (
+                            <TextField
+                                error={!!validate().birthDate}
+                                helperText={validate().birthDate || ''}
+                                label="Data de Nascimento"
+                                name="birthDate"
+                                type="date"
+                                fullWidth
+                                required
+                                value={userData.profile.birthDate.toISOString().split('T')[0]} // Formato YYYY-MM-DD
+                                onChange={(e) => setUserData({ ...userData, profile: { ...userData.profile, birthDate: new Date(e.target.value) } })}
+                                sx={{ mb: 2 }}
+                            />
+                        )}
+
+                        {/* EMPRESA */}
+                        {!isLogin && (
+                            <TextField
+                                error={!!validate().company}
+                                helperText={validate().company || ''}
+                                label="Empresa"
+                                name="company"
+                                fullWidth
+                                required
+                                value={userData.profile.company}
+                                onChange={handleChange}
+                                sx={{ mb: 2 }}
+                            />
+                        )}
+
+                        {/* GÊNERO */}
+                        {!isLogin && (
+                            <TextField
+                                error={!!validate().gender}
+                                helperText={validate().gender || ''}
+                                select
+                                label="Gênero"
+                                name="gender"
+                                fullWidth
+                                required
+                                value={userData.profile.gender}
+                                onChange={handleChange}
+                                sx={{ mb: 2 }}
+                            >
+                                <MenuItem value="male">Masculino</MenuItem>
+                                <MenuItem value="female">Feminino</MenuItem>
+                                <MenuItem value="other">Outro</MenuItem>
+                            </TextField>
+                        )}
+
+                        {/* BOTÃO DE SUBMIT */}
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            color="primary"
+                            sx={{ mt: 2 }}
+                        >
+                            {isLogin ? 'Entrar' : 'Cadastrar'}
+                        </Button>
                     </Box>
+
                     <Link onClick={() => setIsLogin(!isLogin)} sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end', ml: 'auto', "&:hover": { cursor: 'pointer' } }}>
-                        {isLogin ? 'Sign Up' : 'Sign In'}
+                        {!isLogin ? 'Entrar' : 'Cadastrar'}
                     </Link>
                 </Paper>
-            </Container>
-        </div>
+            </Container >
+        </div >
     );
 }

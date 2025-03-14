@@ -1,9 +1,9 @@
 import { Avatar, Box, Typography } from "@mui/material"
-import { User } from "../../api/User/UserModel";
+import { UserModel } from "../../api/User/UserModel";
 import React from "react";
 
 interface IMiniProfileProps {
-    user: User;
+    user: UserModel;
 }
 
 const MiniProfile: React.FC<IMiniProfileProps> = ({ user }) => {

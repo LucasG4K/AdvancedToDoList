@@ -8,14 +8,14 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Meteor } from 'meteor/meteor';
 import { useNavigate } from 'react-router-dom';
-import { User } from '../../api/User/UserModel';
+import { UserModel } from '../../api/User/UserModel';
 import { Divider, Drawer, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import { HomeOutlined, AccountCircleOutlined } from '@mui/icons-material';
 import { MiniProfile } from './miniProfile';
 
 interface IMyAppBarProps {
     title: string,
-    user: User,
+    user: UserModel,
 }
 
 const MyAppBar: React.FC<IMyAppBarProps> = ({ title, user }) => {

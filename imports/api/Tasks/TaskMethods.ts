@@ -32,11 +32,13 @@ Meteor.methods({
     });
   },
 
-  "task.delete"({ _id }: { _id: string }) {
+  async "task.delete"({ _id }: { _id: string }) {
     if (!this.userId) throw new Meteor.Error("not-authorized");
 
-    const task = TasksCollection.findOne(_id);
-    if (task?.userId !== this.userId)
+    const findTask = await TasksCollection.findOneAsync(_id);
+    if (!findTask) throw new Meteor.Error("not-found", "Task not found.");
+
+    if (findTask?.userId !== this.userId)
       throw new Meteor.Error(
         "not-authorized",
         "You can only edit your own tasks."

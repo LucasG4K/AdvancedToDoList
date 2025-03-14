@@ -54,9 +54,9 @@ const ChangeStatus = ({ task }: Props) => {
                     width: '190px',
                     color: decodeStatus(task.status)[1],
                     cursor: 'pointer',
-                    border: '1px solid gray',
                     padding: '2px',
-                    borderRadius: '8px',
+                    border: '1px solid gray',
+                    borderRadius: '12px',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -79,7 +79,7 @@ const ChangeStatus = ({ task }: Props) => {
                     <MenuItem
                         dense
                         key={newStatus}
-                        onClick={() => handleChangeStatus(task._id!, newStatus)}
+                        onClick={() => {handleChangeStatus(task._id!, newStatus); }}
                         sx={{ width: '100%' }}
                     >
                         <Circle

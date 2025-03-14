@@ -25,7 +25,7 @@ export const Home = () => {
 
     return (
         <>
-            <MyAppBar user={user} title={`Olá, ${user?.profile.name}`} />
+            <MyAppBar user={user!} title={`Olá, ${user?.profile.name}`} />
             <HomeScreen>
                 <Overview>
                     <CardOverview title="TAREFAS CADASTRADAS" value={countTasks.registered} />

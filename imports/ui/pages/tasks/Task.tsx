@@ -3,7 +3,6 @@ import { Box, Button, CircularProgress, FormControl, FormControlLabel, FormLabel
 import { TaskModel, TaskStatusModel } from "../../../api/Tasks/TaskModel";
 import { useNavigate, useParams } from "react-router-dom";
 import { AddCircleOutline, ArrowBackOutlined, EditOutlined } from "@mui/icons-material";
-import { Meteor } from "meteor/meteor";
 import { useTasks } from "/imports/providers/taskProvider";
 
 interface ITask {
@@ -12,9 +11,10 @@ interface ITask {
 
 const Task: React.FC<ITask> = ({ editing }) => {
 
-    const { tasks, isLoading } = useTasks();
+    const { tasks, isLoading, handleSave } = useTasks();
     const { id } = useParams(); // id deve ser o mesmo nome da rota definida no App.tsx
     const task = editing ? tasks.find(value => value._id === id) : undefined;
+    const navigate = useNavigate();
 
     if (isLoading) {
         return (
@@ -34,8 +34,6 @@ const Task: React.FC<ITask> = ({ editing }) => {
         );
     }
 
-    const navigate = useNavigate();
-
     const [taskForm, setTaskForm] = useState<TaskModel>({
         title: task?.title || '',
         description: task?.description || '',
@@ -52,23 +50,17 @@ const Task: React.FC<ITask> = ({ editing }) => {
         })
     }
 
-    const handleSave = () => {
-        if (editing) {
-            Meteor.call('task.edit', id, taskForm, (error: Meteor.Error) => {
-                if (error)
-                    alert('Erro ao atualizar: ' + error.message);
-                else
-                    navigate(-1);
-            })
-        } else {
-            Meteor.call('task.insert', taskForm, (error: Meteor.Error) => {
-                if (error)
-                    alert('Erro ao criar: ' + error.message);
-                else
-                    navigate(-1);
-            })
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        try {
+            await handleSave(editing, id!, taskForm);
+            navigate(-1);
+        } catch (error) {
+            if (error instanceof Error) {
+                alert(error.message);
+            }
         }
-    }
+    };
 
     return (
         <>
@@ -96,9 +88,12 @@ const Task: React.FC<ITask> = ({ editing }) => {
                 </Box>
             </Box>
 
-            <Box sx={{ p: 2 }}>
+            <Box component='form' onSubmit={handleSubmit} sx={{ p: 2 }}>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
                     <TextField
+                        required
+                        error={taskForm.title.length < 3}
+                        helperText={taskForm.title.length < 3 ? 'Título pequeno demais' : ''}
                         sx={{ width: '60%' }}
                         label='Título'
                         name='title'
@@ -126,8 +121,8 @@ const Task: React.FC<ITask> = ({ editing }) => {
                 />
                 <Box sx={{ m: 2, display: 'flex', justifyContent: 'flex-end' }}>
                     <Button
+                        type='submit'
                         variant="contained"
-                        onClick={handleSave}
                     >
                         SALVAR
                     </Button>
