@@ -1,13 +1,14 @@
 import React, { createContext, ReactNode, useContext } from "react";
-import { UserModel, UserProfile } from "../api/User/UserModel";
+import { UserModel, UserModelProfile } from "../api/User/UserModel";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 
 interface UserContextType {
     user: UserModel | null;
-    isLoading: boolean;
+    isLoadingUser: boolean;
     handleLogin: (email: string, password: string) => void;
     handleSignUp: (user: UserModel, password: string) => void;
+    handleChangeProfilePic: (base64Image: string) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -53,13 +54,25 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         });
     }
 
-    const isLoading = useSubscribe('users')();
+    const handleChangeProfilePic = async (base64Image: string): Promise<void> => {
+        return await new Promise<void>((resolve, reject) => {
+            Meteor.call('user.updateAvatar', base64Image, (error: Meteor.Error) => {
+                if (error) {
+                    reject( new Error('Erro ao salvar imagem: ' + error.message));
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    const isLoadingUser = useSubscribe('users')();
 
     const user = useTracker(() => {
         const meteorUser = Meteor.user();
         if (!meteorUser) return null;
 
-        const profile = (meteorUser.profile as UserProfile) || {};
+        const profile = (meteorUser.profile as UserModelProfile) || {};
 
         return {
             _id: meteorUser._id,
@@ -76,8 +89,16 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         } as UserModel;
     }, [Meteor.userId()]);
 
+    const UserProviderProps = {
+        user,
+        isLoadingUser,
+        handleLogin,
+        handleSignUp,
+        handleChangeProfilePic
+    }
+
     return (
-        <UserContext.Provider value={{ user, isLoading, handleLogin, handleSignUp }}>
+        <UserContext.Provider value={UserProviderProps}>
             {children}
         </UserContext.Provider>
     );

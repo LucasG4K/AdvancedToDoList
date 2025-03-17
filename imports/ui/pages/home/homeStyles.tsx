@@ -9,12 +9,11 @@ const HomeScreen = styled(Box)(() => ({
 }));
 
 const Overview = styled(Box)(() => ({
-    marginTop: '12px', 
+    marginTop: 1, 
     display: 'flex',
-    width: '100%',
-    height: '15%',
     alignItems: 'center',
-    justifyContent: 'space-evenly'
+    justifyContent: 'space-evenly',
+    padding: 8
 }));
 
 const Tasks = styled(Box)(() => ({
@@ -24,9 +23,6 @@ const Tasks = styled(Box)(() => ({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: '8px',
-    boxSizing: 'content-box',
-    border: 'solid #000000 2px'
 }));
 
 export { HomeScreen, Overview, Tasks };  

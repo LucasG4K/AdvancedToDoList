@@ -1,17 +1,17 @@
 import React, { ChangeEvent, useState } from 'react';
 import { Avatar, Box, Button, Container, Link, MenuItem, Paper, TextField, Typography } from '@mui/material';
 import { HttpsOutlined, PersonAddAltOutlined } from '@mui/icons-material';
-import { Colors } from '../../themes/defaultTheme';
+import { colors } from '../../themes/defaultTheme';
 import { UserModel } from '../../../api/User/UserModel';
 import { useUser } from '/imports/providers/userProvider';
+import { LoadingScreen } from '../../components/loadingScreen';
 
 
 export const Auth = () => {
 
-    const { handleLogin, handleSignUp } = useUser()
+    const { isLoadingUser, handleLogin, handleSignUp } = useUser()
 
     const [isLogin, setIsLogin] = useState<Boolean>(true);
-    const color: Colors = new Colors;
 
     const [password, setPassword] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState<string>('');
@@ -22,7 +22,7 @@ export const Auth = () => {
         username: '',
         profile: {
             name: '',
-            birthDate: new Date(),
+            birthDate: null,
             avatar: '',
             company: '',
             gender: 'other'
@@ -49,51 +49,51 @@ export const Auth = () => {
 
     const validate = (): { [key: string]: string } => {
         const errors: { [key: string]: string } = {};
-    
+
         // Validação de email (regex simples)
         const emailRegex = /^(.+)@[\w]+\.\w+$/;
         if (!emailRegex.test(userData.email)) {
             errors.email = 'Email inválido.';
         }
-    
+
         // Validação de senha (mínimo 6 caracteres)
         if (!isLogin && password.length < 6) {
             errors.password = 'A senha deve ter pelo menos 6 caracteres.';
         }
-    
+
         // Validação de confirmação de senha
         if (!isLogin && password !== confirmPassword) {
             errors.confirmPassword = 'As senhas não coincidem.';
         }
-    
+
         // Validação de nome (obrigatório no cadastro)
         if (!isLogin && !userData.profile.name) {
             errors.name = 'O nome é obrigatório.';
         }
-    
+
         // Validação de nascimento (opcional, mas você pode adicionar algum critério)
         if (!isLogin && !userData.profile.birthDate) {
             errors.birthDate = 'A data de nascimento é obrigatória.';
         }
-    
+
         // Validação de empresa (obrigatório no cadastro)
         if (!isLogin && !userData.profile.company) {
             errors.company = 'A empresa é obrigatória.';
         }
-    
+
         // Validação de gênero (obrigatório no cadastro)
         if (!isLogin && userData.profile.gender === 'other') {
             errors.gender = 'Selecione um gênero.';
         }
-    
+
         return errors;
     }
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        
+
         const validationErrors = validate();
-        
+
         // Se houver erros, mostrar na interface e impedir o envio do formulário
         if (Object.keys(validationErrors).length > 0) {
             // Exibir os erros como mensagem
@@ -102,7 +102,7 @@ export const Auth = () => {
             }
             return;
         }
-    
+
         if (isLogin) {
             try {
                 await handleLogin(userData.email, password);
@@ -121,17 +121,20 @@ export const Auth = () => {
                 }
             }
         }
-    
+
         setPassword('');
         setConfirmPassword('');
     };
-    
+
+    if (isLoadingUser) {
+        return <LoadingScreen />
+    }
 
     return (
         <div>
             <Container maxWidth="xs">
                 <Paper elevation={10} sx={{ mt: 2, mb: 2, p: 2, height: 'vh' }}>
-                    <Avatar sx={{ mx: 'auto', bgcolor: color.primary, textAlign: 'center', mb: 1 }}>
+                    <Avatar sx={{ mx: 'auto', bgcolor: colors.primary, textAlign: 'center', mb: 1 }}>
                         {isLogin ? <HttpsOutlined /> : <PersonAddAltOutlined />}
                     </Avatar>
                     <Typography component="h1" variant="h5" sx={{ textAlign: 'center' }}>
@@ -207,7 +210,7 @@ export const Auth = () => {
                                 type="date"
                                 fullWidth
                                 required
-                                value={userData.profile.birthDate.toISOString().split('T')[0]} // Formato YYYY-MM-DD
+                                value={userData.profile.birthDate ? userData.profile.birthDate.toISOString().split('T')[0] : null} // Formato YYYY-MM-DD
                                 onChange={(e) => setUserData({ ...userData, profile: { ...userData.profile, birthDate: new Date(e.target.value) } })}
                                 sx={{ mb: 2 }}
                             />

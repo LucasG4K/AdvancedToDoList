@@ -8,17 +8,17 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Meteor } from 'meteor/meteor';
 import { useNavigate } from 'react-router-dom';
-import { UserModel } from '../../api/User/UserModel';
 import { Divider, Drawer, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import { HomeOutlined, AccountCircleOutlined } from '@mui/icons-material';
 import { MiniProfile } from './miniProfile';
+import { useUser } from '/imports/providers/userProvider';
 
 interface IMyAppBarProps {
     title: string,
-    user: UserModel,
 }
 
-const MyAppBar: React.FC<IMyAppBarProps> = ({ title, user }) => {
+const MyAppBar: React.FC<IMyAppBarProps> = ({ title }) => {
+    const { user } = useUser();
     const navigate = useNavigate();
     const logout = () => Meteor.logout(() => navigate('/', { replace: true }));
 
@@ -27,7 +27,7 @@ const MyAppBar: React.FC<IMyAppBarProps> = ({ title, user }) => {
 
     const DrawerList = (
         <Box sx={{ width: 250 }} role="presentation">
-            <MiniProfile user={user} />
+            <MiniProfile user={user!} />
             <Divider />
             <List>
                 <ListItem disablePadding>

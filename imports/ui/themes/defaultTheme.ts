@@ -1,6 +1,6 @@
 import { createTheme } from "@mui/material/styles";
 
-export class Colors {
+class Colors {
   readonly primary: string = "#fcbf49";
   readonly secondary: string = "#eae2b7";
   readonly terciary: string = "#f77f00";
@@ -20,3 +20,4 @@ const DefaultTheme = createTheme({
 });
 
 export default DefaultTheme;
+export { colors };

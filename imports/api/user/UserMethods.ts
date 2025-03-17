@@ -3,6 +3,7 @@
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
 import { UserModel, UserProfile } from "./UserModel";
+import { check } from 'meteor/check';
 
 Meteor.methods({
   "user.create"(userData: UserModel, password: string) {
@@ -23,12 +24,24 @@ Meteor.methods({
 
       return userId;
     } catch (error) {
-      throw new Meteor.Error('user-creation-failed', 'Failed to create user');
+      throw new Meteor.Error("user-creation-failed", "Failed to create user");
     }
   },
 
   "user.update"(profile: UserProfile) {
     if (!this.userId) throw new Meteor.Error("not-authorized");
     Meteor.users.updateAsync(this.userId, { $set: { profile } });
+  },
+
+  async "user.updateAvatar"(base64Image: string) {
+    check(base64Image, String);
+
+    if (!this.userId) {
+      throw new Meteor.Error("not-authorized");
+    }
+
+    Meteor.users.updateAsync(this.userId, {
+      $set: { "profile.avatar": base64Image },
+    });
   },
 });

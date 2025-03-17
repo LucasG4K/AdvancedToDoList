@@ -1,28 +1,26 @@
-import React from "react";
-import { Box, Button, CircularProgress, InputAdornment, Menu, TextField } from "@mui/material";
+import React, { ChangeEvent } from "react";
+import { Box, Button, InputAdornment, TextField } from "@mui/material";
 import { MyAppBar } from "../../components/myAppBar";
-import { TasksTable } from "./components/tasksTable";
+import { TaskList } from "./components/taskList";
 import { AddCircleOutlineOutlined, ArrowBackOutlined, SearchOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../../providers/userProvider";
 import { useTasks } from "../../../providers/taskProvider";
+import { LoadingScreen } from "../../components/loadingScreen";
 
-const TodoList: React.FC = () => {
+const TodoList: React.FC = React.memo(() => {
     const { user } = useUser();
-    const { isLoading } = useTasks();
-    const navigate = useNavigate();
+    const { isLoadingTasks, handleSearch } = useTasks();
 
-    if (isLoading) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-                <CircularProgress />
-            </Box>
-        );
+    if (isLoadingTasks) {
+        return <LoadingScreen />
     }
+
+    const navigate = useNavigate();
 
     return (
         <>
-            <MyAppBar user={user!} title="TAREFAS" />
+            <MyAppBar title="TAREFAS" />
             <Box sx={{ display: "flex", justifyContent: "space-between", m: 2 }}>
                 <Button
                     startIcon={<ArrowBackOutlined />}
@@ -39,19 +37,16 @@ const TodoList: React.FC = () => {
                     Nova Tarefa
                 </Button>
             </Box>
-            <Box sx={{display: 'flex', justifyContent: 'center', width: '50vw', mx:'auto'}}>
-                <TextField fullWidth label={'Pesquisar Tarefa'} InputProps={{
+            <Box sx={{ display: 'flex', justifyContent: 'center', width: '50vw', mx: 'auto' }}>
+                <TextField onChange={(event: ChangeEvent<HTMLInputElement>) => handleSearch(event.target.value)} fullWidth label={'Pesquisar Tarefa'} InputProps={{
                     startAdornment: (<InputAdornment position="start">
                         <SearchOutlined />
                     </InputAdornment>)
                 }} />
-                <Menu open={false}>
-                    
-                </Menu>
             </Box>
-            <TasksTable detailedTable={true} userId={user!._id} />
+            <TaskList detailedTable={true} userId={user!._id} />
         </>
     );
-};
+});
 
 export { TodoList };

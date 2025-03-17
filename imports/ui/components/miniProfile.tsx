@@ -14,7 +14,7 @@ const MiniProfile: React.FC<IMiniProfileProps> = ({ user }) => {
             alignItems: 'center',
             m: 2,
         }}>
-            <Avatar />
+            <Avatar src={user?.profile?.avatar || ''}/>
             <Typography >{user.username}</Typography>
             <Typography>{user.profile.company}</Typography>
             <Typography>{user.email}</Typography>

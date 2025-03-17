@@ -8,8 +8,10 @@ export interface TaskModel {
   _id?: string;
   userId?: string;
   userName?: string;
+  ownerImg?: string;
   title: string;
   description: string;
+  due: Date | null;
   status: TaskStatusModel;
   private: boolean,
   lastModified: Date;

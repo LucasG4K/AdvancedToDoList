@@ -4,16 +4,20 @@ import { TasksCollection } from '/imports/api/Tasks/TasksCollection';
 import { useUser } from './userProvider';
 import { TaskModel, TaskStatusModel } from '../api/Tasks/TaskModel';
 import { Meteor } from 'meteor/meteor';
+import { UserModel } from '../api/User/UserModel';
 
 interface TaskContextType {
     tasks: TaskModel[];
-    isLoading: boolean;
+    totalCount: number;
+    isLoadingTasks: boolean;
     page: number;
     totalPages: number;
     setPage: (page: number) => void;
+    setSearch: (search: string) => void;
     handleSave: (editing: boolean, id: string, taskForm: TaskModel) => void;
     handleChangeStatus: (_id: string, newStatus: TaskStatusModel) => void;
     handleDeleteTask: (_id: string) => void;
+    handleSearch: (title: string) => void;
     countTasks: {
         registered: number;
         inProgress: number;
@@ -35,10 +39,11 @@ const useTasks = () => {
 
 const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useUser();
-    const [page, setPage] = useState(1);
+    const [search, setSearch] = useState<string>('')
+    const [page, setPage] = useState<number>(1);
     const limit = 4;
     const skip = (page - 1) * limit;
-    
+
     const handleSave = (editing: boolean, id: string, taskForm: TaskModel): Promise<void> => {
         return new Promise((resolve, reject) => {
             if (editing) {
@@ -61,11 +66,15 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         });
     };
 
-    const handleChangeStatus = (_id: string, newStatus: TaskStatusModel) => {
-        Meteor.call('task.status', { _id, taskStatus: newStatus }, (error: Meteor.Error) => {
-            if (error) {
-                alert("Erro ao atualizar a tarefa: " + error.reason);
-            }
+    const handleChangeStatus = (_id: string, newStatus: TaskStatusModel): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            Meteor.call('task.status', { _id, taskStatus: newStatus }, (error: Meteor.Error) => {
+                if (error) {
+                    reject(new Error('Erro ao atualizar status: ' + error.message));
+                } else {
+                    resolve();
+                }
+            });
         });
     };
 
@@ -77,49 +86,65 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         });
     };
 
-    const isLoading = useSubscribe('tasks', { limit, skip })();
+    const isLoadingTasks = useSubscribe('tasks')();
+
+    const handleSearch = (title: string) => {
+        setSearch(title);
+    }
 
     const { tasks, totalCount, countTasks } = useTracker(() => {
-        console.log('tracker do TASKS');
+
         const fetchedTasks = TasksCollection.find(
-            { $or: [{ private: false }, { userId: user?._id }] },
-            { sort: { createdAt: -1 }, limit, skip }
+            {
+                $or: [{ private: false }, { userId: user?._id }],
+                ...(search ? { title: { $regex: search, $options: "i" } } : {})
+            },
+            { sort: { due: -1, createdAt: -1 }, limit, skip }
         ).fetch();
 
         const total = TasksCollection.find(
-            { $or: [{ private: false }, { userId: user?._id }] }
+            {
+                $or: [{ private: false }, { userId: user?._id }],
+                ...(search ? { title: { $regex: search, $options: "i" } } : {})
+            }
         ).count();
 
         const countTasks = {
             registered: TasksCollection.find(
                 {
-                    $or: [{ private: false}, {userId: user?._id }],
+                    $or: [{ private: false }, { userId: user?._id }],
                     status: TaskStatusModel.REGISTERED,
                 }
             ).count(),
             inProgress: TasksCollection.find(
                 {
-                    $or: [{ private: false}, {userId: user?._id }],
+                    $or: [{ private: false }, { userId: user?._id }],
                     status: TaskStatusModel.IN_PROGRESS,
                 }
             ).count(),
             completed: TasksCollection.find(
                 {
-                    $or: [{ private: false}, {userId: user?._id }],
+                    $or: [{ private: false }, { userId: user?._id }],
                     status: TaskStatusModel.COMPLETED,
                 }
             ).count(),
         };
 
-        return {
-            tasks: fetchedTasks.map(task => ({
+        const tasksWithUsers: TaskModel[] = fetchedTasks.map(task => {
+            const user = Meteor.users.findOne(task.userId) as UserModel;
+            return {
                 ...task,
-                userName: Meteor.users.findOne(task.userId)?.username || 'Desconhecido',
-            })),
+                userName: user?.username || 'Desconhecido',
+                ownerImg: user?.profile?.avatar || 'Desconhecido',
+            };
+        });
+        return {
+            tasks: tasksWithUsers,
             totalCount: total,
             countTasks: countTasks,
         };
-    }, [isLoading, page]);
+
+    }, [page, search, isLoadingTasks]);
 
     const totalPages = Math.ceil(totalCount / limit);
 
@@ -129,8 +154,23 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         }
     }, [totalPages]);
 
+    const TaskProviderProps = {
+        tasks,
+        isLoadingTasks,
+        page,
+        totalPages,
+        totalCount,
+        countTasks,
+        setSearch,
+        setPage,
+        handleSave,
+        handleChangeStatus,
+        handleDeleteTask,
+        handleSearch
+    };
+
     return (
-        <TaskContext.Provider value={{ tasks, isLoading, page, totalPages, countTasks, setPage, handleSave, handleChangeStatus, handleDeleteTask }}>
+        <TaskContext.Provider value={TaskProviderProps}>
             {children}
         </TaskContext.Provider>
     );
