@@ -86,7 +86,7 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         });
     };
 
-    const isLoadingTasks = useSubscribe('tasks')();
+    const isLoadingTasks = useSubscribe('tasks', {limit, skip})();
 
     const handleSearch = (title: string) => {
         setSearch(title);

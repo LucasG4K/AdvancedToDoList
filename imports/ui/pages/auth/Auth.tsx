@@ -2,57 +2,24 @@ import React, { ChangeEvent, useState } from 'react';
 import { Avatar, Box, Button, Container, Link, MenuItem, Paper, TextField, Typography } from '@mui/material';
 import { HttpsOutlined, PersonAddAltOutlined } from '@mui/icons-material';
 import { colors } from '../../themes/defaultTheme';
-import { UserModel } from '../../../api/User/UserModel';
 import { useUser } from '/imports/providers/userProvider';
-import { LoadingScreen } from '../../components/loadingScreen';
 
 
 export const Auth = () => {
 
-    const { isLoadingUser, handleLogin, handleSignUp } = useUser()
+    const { handleLogin, handleSignUp, userForm, setUserForm, handleChangeUserForm } = useUser()
 
     const [isLogin, setIsLogin] = useState<Boolean>(true);
 
     const [password, setPassword] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState<string>('');
 
-    const [userData, setUserData] = useState<UserModel>({
-        _id: '',
-        email: '',
-        username: '',
-        profile: {
-            name: '',
-            birthDate: null,
-            avatar: '',
-            company: '',
-            gender: 'other'
-        },
-        createdAt: new Date(),
-    } as UserModel);
-
-    const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-        if (event.target.name in userData.profile) {
-            setUserData({
-                ...userData,
-                profile: {
-                    ...userData.profile,
-                    [event.target.name]: event.target.value
-                }
-            })
-        } else {
-            setUserData({
-                ...userData,
-                [event.target.name]: event.target.value
-            });
-        }
-    }
-
     const validate = (): { [key: string]: string } => {
         const errors: { [key: string]: string } = {};
 
         // Validação de email (regex simples)
         const emailRegex = /^(.+)@[\w]+\.\w+$/;
-        if (!emailRegex.test(userData.email)) {
+        if (!emailRegex.test(userForm.email)) {
             errors.email = 'Email inválido.';
         }
 
@@ -67,22 +34,22 @@ export const Auth = () => {
         }
 
         // Validação de nome (obrigatório no cadastro)
-        if (!isLogin && !userData.profile.name) {
+        if (!isLogin && !userForm.profile.name) {
             errors.name = 'O nome é obrigatório.';
         }
 
         // Validação de nascimento (opcional, mas você pode adicionar algum critério)
-        if (!isLogin && !userData.profile.birthDate) {
+        if (!isLogin && !userForm.profile.birthDate) {
             errors.birthDate = 'A data de nascimento é obrigatória.';
         }
 
         // Validação de empresa (obrigatório no cadastro)
-        if (!isLogin && !userData.profile.company) {
+        if (!isLogin && !userForm.profile.company) {
             errors.company = 'A empresa é obrigatória.';
         }
 
         // Validação de gênero (obrigatório no cadastro)
-        if (!isLogin && userData.profile.gender === 'other') {
+        if (!isLogin && userForm.profile.gender === 'other') {
             errors.gender = 'Selecione um gênero.';
         }
 
@@ -105,7 +72,7 @@ export const Auth = () => {
 
         if (isLogin) {
             try {
-                await handleLogin(userData.email, password);
+                await handleLogin(userForm.email, password);
             } catch (error) {
                 if (error instanceof Error) {
                     alert(error.message);
@@ -113,8 +80,8 @@ export const Auth = () => {
             }
         } else {
             try {
-                await handleSignUp(userData, password);
-                await handleLogin(userData.email, password);
+                await handleSignUp(userForm, password);
+                await handleLogin(userForm.email, password);
             } catch (error) {
                 if (error instanceof Error) {
                     alert(error.message);
@@ -125,10 +92,6 @@ export const Auth = () => {
         setPassword('');
         setConfirmPassword('');
     };
-
-    if (isLoadingUser) {
-        return <LoadingScreen />
-    }
 
     return (
         <div>
@@ -151,8 +114,8 @@ export const Auth = () => {
                                 name="name"
                                 fullWidth
                                 required
-                                value={userData.profile.name}
-                                onChange={handleChange}
+                                value={userForm.profile.name}
+                                onChange={handleChangeUserForm}
                                 sx={{ mb: 2 }}
                             />
                         )}
@@ -165,8 +128,8 @@ export const Auth = () => {
                             name="email"
                             fullWidth
                             required
-                            value={userData.email}
-                            onChange={handleChange}
+                            value={userForm.email}
+                            onChange={handleChangeUserForm}
                             sx={{ mb: 2 }}
                         />
 
@@ -210,8 +173,9 @@ export const Auth = () => {
                                 type="date"
                                 fullWidth
                                 required
-                                value={userData.profile.birthDate ? userData.profile.birthDate.toISOString().split('T')[0] : null} // Formato YYYY-MM-DD
-                                onChange={(e) => setUserData({ ...userData, profile: { ...userData.profile, birthDate: new Date(e.target.value) } })}
+                                InputLabelProps={{ shrink: true }}
+                                value={userForm.profile.birthDate ? userForm.profile.birthDate.toISOString().split('T')[0] : null} // Formato YYYY-MM-DD
+                                onChange={(e) => setUserForm({ ...userForm, profile: { ...userForm.profile, birthDate: new Date(e.target.value) } })}
                                 sx={{ mb: 2 }}
                             />
                         )}
@@ -225,8 +189,8 @@ export const Auth = () => {
                                 name="company"
                                 fullWidth
                                 required
-                                value={userData.profile.company}
-                                onChange={handleChange}
+                                value={userForm.profile.company}
+                                onChange={handleChangeUserForm}
                                 sx={{ mb: 2 }}
                             />
                         )}
@@ -241,8 +205,8 @@ export const Auth = () => {
                                 name="gender"
                                 fullWidth
                                 required
-                                value={userData.profile.gender}
-                                onChange={handleChange}
+                                value={userForm.profile.gender}
+                                onChange={handleChangeUserForm}
                                 sx={{ mb: 2 }}
                             >
                                 <MenuItem value="male">Masculino</MenuItem>
@@ -254,6 +218,7 @@ export const Auth = () => {
                         {/* BOTÃO DE SUBMIT */}
                         <Button
                             type="submit"
+                            disabled={false}
                             fullWidth
                             variant="contained"
                             color="primary"
@@ -263,7 +228,18 @@ export const Auth = () => {
                         </Button>
                     </Box>
 
-                    <Link onClick={() => setIsLogin(!isLogin)} sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end', ml: 'auto', "&:hover": { cursor: 'pointer' } }}>
+                    <Link
+                        sx={
+                            {
+                                mt: 1,
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                                ml: 'auto',
+                                "&:hover": { cursor: 'pointer' }
+                            }
+                        }
+                        onClick={() => setIsLogin(!isLogin)}
+                    >
                         {!isLogin ? 'Entrar' : 'Cadastrar'}
                     </Link>
                 </Paper>

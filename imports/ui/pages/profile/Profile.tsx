@@ -5,13 +5,14 @@ import { useUser } from "../../../providers/userProvider";
 import { ProfileScreen, ProfileContainer, ProfileInfomation, ProfilePicture, StyledTextField } from "./profileStyles";
 import { BadgeProfile } from "./components/pictureBadge";
 import { CheckOutlined, EditOutlined } from "@mui/icons-material";
+import { LoadingScreen } from "../../components/loadingScreen";
 
 const Profile: React.FC = () => {
-    const { user, handleChangeProfilePic } = useUser();
+    const { user, userForm, handleChangeUserForm, handleChangeProfilePic, handleEditProfile, isLoadingUser } = useUser();
     const [editing, setEditing] = useState(false);
 
-    if (!user) {
-        return <Typography>Carregando...</Typography>;
+    if (isLoadingUser) {
+        return <LoadingScreen />;
     }
 
     const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
@@ -48,6 +49,17 @@ const Profile: React.FC = () => {
         }
     }
 
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        try {
+            await handleEditProfile();
+        } catch (error) {
+            if (error instanceof Error) {
+                alert(error.message);
+            }
+        }
+    };
+
     return (
         <>
             <MyAppBar title="PERFIL" />
@@ -59,22 +71,22 @@ const Profile: React.FC = () => {
                         avatarSrc={user?.profile?.avatar || ''}
                     />
                 </ProfilePicture>
-                <ProfileContainer>
+                <Box component='form' onSubmit={handleSubmit} sx={ProfileContainer}>
                     <ProfileInfomation >
                         <Typography>Nome:</Typography>
-                        <StyledTextField disabled={!editing} value={user.username} />
+                        <StyledTextField disabled={!editing} name='name' value={userForm.profile.name} onChange={handleChangeUserForm} />
                     </ProfileInfomation>
                     <ProfileInfomation>
                         <Typography>E-mail:</Typography>
-                        <StyledTextField disabled value={user.email || ''} />
+                        <StyledTextField disabled value={userForm.email || ''} onChange={handleChangeUserForm} />
                     </ProfileInfomation>
                     <ProfileInfomation>
                         <Typography>Nome de Usuário:</Typography>
-                        <StyledTextField disabled value={user.username || ''} />
+                        <StyledTextField disabled value={userForm.username || ''} />
                     </ProfileInfomation>
                     <ProfileInfomation>
                         <Typography>Gênero:</Typography>
-                        <StyledTextField disabled={!editing} select value={user.profile.gender || ''} >
+                        <StyledTextField disabled={!editing} select name='gender' value={userForm.profile.gender || ''} onChange={handleChangeUserForm} >
                             <MenuItem value="male">Masculino</MenuItem>
                             <MenuItem value="female">Feminino</MenuItem>
                             <MenuItem value="other">Outro</MenuItem>
@@ -82,14 +94,24 @@ const Profile: React.FC = () => {
                     </ProfileInfomation>
                     <ProfileInfomation>
                         <Typography>Empresa:</Typography>
-                        <StyledTextField disabled={!editing} value={user.profile.company || ''} />
+                        <StyledTextField disabled={!editing} name='company' value={userForm.profile.company || ''} onChange={handleChangeUserForm} />
                     </ProfileInfomation>
                     <ProfileInfomation>
                         <Typography>Data de Nascimento:</Typography>
-                        <StyledTextField disabled={!editing} type="date" value={user.profile.birthDate.toISOString().split('T')[0] || ''} />
+                        <StyledTextField
+                            disabled={!editing}
+                            type="date"
+                            name="birthDate"
+                            onChange={handleChangeUserForm}
+                            value={userForm.profile.birthDate ? new Date(userForm.profile.birthDate).toISOString().split('T')[0] : ''}
+                        />
+
                     </ProfileInfomation>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: 1 }}>
-                        <Button variant="contained" sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={() => setEditing(!editing)}>
+                        <Button
+                            sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                            type={!editing ? 'submit' : undefined} variant="contained" onClick={() => setEditing(!editing)}
+                        >
                             {!editing ? (
                                 <>
                                     <EditOutlined />
@@ -103,7 +125,7 @@ const Profile: React.FC = () => {
                             )}
                         </Button>
                     </Box>
-                </ProfileContainer>
+                </Box>
             </ProfileScreen>
         </>
     );

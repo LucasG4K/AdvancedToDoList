@@ -11,12 +11,12 @@ import { LoadingScreen } from '../../components/loadingScreen';
 
 
 export const Home = () => {
-    const { user } = useUser();
-    const { countTasks, isLoadingTasks, totalCount } = useTasks();
+    const { user, isLoadingUser } = useUser();
+    const { countTasks, totalCount, isLoadingTasks } = useTasks();
     const navigate = useNavigate();
     const todoListNavigate = () => navigate('/todo-list');
 
-    if (isLoadingTasks) {
+    if (isLoadingTasks || isLoadingUser) {1
         return <LoadingScreen />
     }
 

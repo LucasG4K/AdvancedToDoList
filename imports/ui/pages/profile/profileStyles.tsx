@@ -9,14 +9,14 @@ const ProfileScreen = styled(Box)(() => ({
     alignItems: 'center',
 }));
 
-const ProfileContainer = styled(Box)(() => ({
+const ProfileContainer = {
     padding: '32px',
     display: 'flex',
     flexDirection: 'column',
     borderRadius: '8px',
     boxSizing: 'content-box',
     border: 'solid #000000 2px'
-}));
+};
 
 const ProfileInfomation = styled(Box)(() => ({
     padding: 8,

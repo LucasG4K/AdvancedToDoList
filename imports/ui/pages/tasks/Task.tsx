@@ -43,7 +43,7 @@ const Task: React.FC<ITask> = React.memo(({ editingScreen }) => {
         due: task?.due || null,
         status: task?.status || TaskStatusModel.REGISTERED,
         private: task?.private ?? false,
-        lastModified: new Date(),
+        lastModified: task?.lastModified || new Date(),
         createdAt: task?.createdAt || new Date(),
     } as TaskModel);
 
@@ -191,21 +191,18 @@ const Task: React.FC<ITask> = React.memo(({ editingScreen }) => {
                     <TextField
                         label="Criado Por"
                         value={taskForm.userName}
-                        InputProps={{ readOnly: true }}
                         fullWidth
                         disabled
                     />
                     <TextField
                         label="Criado em"
                         value={handleLocaleDateString(new Date(taskForm.createdAt))}
-                        InputProps={{ readOnly: true }}
                         fullWidth
                         disabled
                     />
                     <TextField
                         label="Última modificação"
                         value={handleLocaleDateString(new Date(taskForm.lastModified))}
-                        InputProps={{ readOnly: true }}
                         fullWidth
                         disabled
                     />

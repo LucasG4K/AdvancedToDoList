@@ -2,7 +2,7 @@
 
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
-import { UserModel, UserProfile } from "./UserModel";
+import { UserModel, UserModelProfile } from "./UserModel";
 import { check } from 'meteor/check';
 
 Meteor.methods({
@@ -28,7 +28,7 @@ Meteor.methods({
     }
   },
 
-  "user.update"(profile: UserProfile) {
+  "user.update"(profile: UserModelProfile) {
     if (!this.userId) throw new Meteor.Error("not-authorized");
     Meteor.users.updateAsync(this.userId, { $set: { profile } });
   },

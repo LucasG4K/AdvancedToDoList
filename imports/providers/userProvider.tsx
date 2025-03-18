@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useContext } from "react";
+import React, { ChangeEvent, createContext, ReactNode, useContext, useState } from "react";
 import { UserModel, UserModelProfile } from "../api/User/UserModel";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
@@ -6,6 +6,11 @@ import { Meteor } from "meteor/meteor";
 interface UserContextType {
     user: UserModel | null;
     isLoadingUser: boolean;
+    userForm: UserModel;
+    setUserForm: (user: UserModel) => void;
+    handleEditProfile: () => void;
+    handleChangeUserForm: (event: ChangeEvent<HTMLInputElement>) => void;
+    clearUser: () => void; 
     handleLogin: (email: string, password: string) => void;
     handleSignUp: (user: UserModel, password: string) => void;
     handleChangeProfilePic: (base64Image: string) => void;
@@ -21,6 +26,29 @@ const useUser = () => {
 }
 
 const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+
+    const isLoadingUser = useSubscribe('users')();
+
+    const user: UserModel | null = useTracker(() => {
+        const meteorUser = Meteor.user();
+        if (!meteorUser) return null;
+
+        const profile = (meteorUser.profile as UserModelProfile) || {};
+
+        return {
+            _id: meteorUser._id || "",
+            email: meteorUser.emails?.[0]?.address || "",
+            username: meteorUser.username || "",
+            profile: {
+                name: profile.name || "",
+                birthDate: profile.birthDate ? new Date(profile.birthDate) : null,
+                avatar: profile.avatar || "",
+                company: profile.company || "",
+                gender: profile.gender || null,
+            },
+            createdAt: meteorUser?.createdAt || new Date(),
+        } as UserModel;
+    }, [Meteor.userId()]);
 
     const handleLogin = async (email: string, password: string): Promise<void> => {
         return new Promise((resolve, reject) => {
@@ -58,7 +86,7 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         return await new Promise<void>((resolve, reject) => {
             Meteor.call('user.updateAvatar', base64Image, (error: Meteor.Error) => {
                 if (error) {
-                    reject( new Error('Erro ao salvar imagem: ' + error.message));
+                    reject(new Error('Erro ao salvar imagem: ' + error.message));
                 } else {
                     resolve();
                 }
@@ -66,35 +94,83 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         });
     }
 
-    const isLoadingUser = useSubscribe('users')();
+    const handleEditProfile = async (): Promise<void> => {
+        return await new Promise<void>((resolve, reject) => {
+            Meteor.call('user.update', userForm.profile), (error: Meteor.Error) => {
+                if (error) {
+                    reject(new Error('Erro ao atualizar perfil: ' + error.message));
+                } else {
+                    resolve();
+                }
+            }
+        });
+    }
 
-    const user = useTracker(() => {
-        const meteorUser = Meteor.user();
-        if (!meteorUser) return null;
+    const [userForm, setUserForm] = useState<UserModel>({
+        _id: user?._id || '',
+        email: user?.email || '',
+        username: user?.username || '',
+        profile: {
+            name: user?.profile.name || '',
+            birthDate: user?.profile.birthDate || null,
+            avatar: user?.profile.avatar || '',
+            company: user?.profile.company || '',
+            gender: user?.profile.gender || null
+        },
+        createdAt: user?.createdAt || new Date(),
+    } as UserModel); 
 
-        const profile = (meteorUser.profile as UserModelProfile) || {};
+    React.useEffect(() => {
+        if (user && JSON.stringify(user) !== JSON.stringify(userForm)) {
+            setUserForm(user);
+        }
+    }, [user]);
 
-        return {
-            _id: meteorUser._id,
-            username: meteorUser.username,
-            email: meteorUser.emails?.[0]?.address || "",
+    const handleChangeUserForm = (event: ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = event.target;
+        if (name in userForm.profile) {
+            setUserForm({
+                ...userForm,
+                profile: {
+                    ...userForm.profile,
+                    [name]: value
+                }
+            })
+        } else {
+            setUserForm({
+                ...userForm,
+                [name]: value
+            });
+        }
+    }
+
+    const clearUser = () => {
+        setUserForm({
+            _id: '',
+            email: '',
+            username: '',
             profile: {
-                name: profile.name || "",
-                gender: profile.gender || "",
-                birthDate: profile.birthDate ? new Date(profile.birthDate) : new Date(),
-                avatar: profile.avatar || undefined,
-                company: profile.company || undefined,
+                name: '',
+                birthDate: null,
+                avatar: '',
+                company: '',
+                gender: null
             },
-            createdAt: meteorUser.createdAt ? new Date(meteorUser.createdAt) : new Date(),
-        } as UserModel;
-    }, [Meteor.userId()]);
+            createdAt: new Date(),
+        })
+    }
 
     const UserProviderProps = {
         user,
         isLoadingUser,
+        userForm,
+        setUserForm,
+        handleChangeUserForm,
+        clearUser,
         handleLogin,
         handleSignUp,
-        handleChangeProfilePic
+        handleChangeProfilePic,
+        handleEditProfile,
     }
 
     return (

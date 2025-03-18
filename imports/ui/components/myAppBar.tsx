@@ -18,9 +18,16 @@ interface IMyAppBarProps {
 }
 
 const MyAppBar: React.FC<IMyAppBarProps> = ({ title }) => {
-    const { user } = useUser();
+    const { user, clearUser } = useUser();
     const navigate = useNavigate();
-    const logout = () => Meteor.logout(() => navigate('/', { replace: true }));
+    const logout = () => {
+        Meteor.logout(
+            () => {
+                navigate('/', { replace: true });
+                clearUser();
+            }
+        );
+    }
 
     const [openDrawer, setOpenDrawer] = useState(false);
     const toggleDrawer = () => setOpenDrawer(!openDrawer);

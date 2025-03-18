@@ -17,7 +17,7 @@ Meteor.methods({
     if (!findTask) throw new Meteor.Error("not-found", "Task not found.");
 
     return TasksCollection.updateAsync(_id, {
-      $set: {...task}
+      $set: {...task, lastModified: new Date()}
     });
   },
 
