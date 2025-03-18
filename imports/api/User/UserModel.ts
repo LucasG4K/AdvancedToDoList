@@ -2,8 +2,8 @@
 
 export interface UserModelProfile {
   name: string;
-  gender: 'male' | 'female' | 'other' | null;
-  birthDate: Date | null;
+  gender: 'male' | 'female' | 'other' | "";
+  birthDate: Date | "";
   avatar?: string; // Base64 ou da foto de perfil
   company: string; // Local onde o usuário trabalha
 }

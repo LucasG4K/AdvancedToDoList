@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useState } from "react";
-import { Box, Button, MenuItem, Typography } from "@mui/material";
+import { Box, Button, IconButton, MenuItem, Typography } from "@mui/material";
 import { MyAppBar } from "../../components/myAppBar";
 import { useUser } from "../../../providers/userProvider";
 import { ProfileScreen, ProfileContainer, ProfileInfomation, ProfilePicture, StyledTextField } from "./profileStyles";
@@ -7,13 +7,41 @@ import { BadgeProfile } from "./components/pictureBadge";
 import { CheckOutlined, EditOutlined } from "@mui/icons-material";
 import { LoadingScreen } from "../../components/loadingScreen";
 
-const Profile: React.FC = () => {
+
+const Profile: React.FC = React.memo(() => {
     const { user, userForm, handleChangeUserForm, handleChangeProfilePic, handleEditProfile, isLoadingUser } = useUser();
     const [editing, setEditing] = useState(false);
 
-    if (isLoadingUser) {
-        return <LoadingScreen />;
+    
+    const [userFormError, setUserFormError] = useState({
+        email: "",
+        gender: "",
+        name: "",
+        birthDate: "",
+    });
+    
+    const emailRegex = /^(.+)@[\w]+\.\w+$/;
+    const today = new Date();
+
+    const transformDate = (date: Date | string) => {
+        let temp;
+        if (typeof date === 'string') {
+            temp = date;
+        } else {
+            temp = date.toISOString().split('T')[0];
+        }
+        return `${temp.split('-')[2]}/${temp.split('-')[1]}/${temp.split('-')[0]}`
     }
+
+    React.useEffect(() => {
+        const genderOptions = ['male', 'female', 'other']; // Gêneros válidos
+        setUserFormError({
+            email: userForm.email === "" || emailRegex.test(userForm.email) ? "" : "E-mail inválido",
+            name: userForm.profile.name === "" || userForm.profile.name.length > 2 ? "" : "O nome deve ter pelo menos 3 caracteres",
+            birthDate: userForm.profile.birthDate === "" || transformDate(userForm.profile.birthDate) <= transformDate(today) ? "" : "Data inválida",
+            gender: userForm.profile.gender === "" || genderOptions.includes(userForm.profile.gender) ? "" : "Gênero não atribuído", // Validação do gênero
+        });
+    }, [userForm]); // O efeito será executado sempre que o userForm mudar
 
     const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -51,14 +79,31 @@ const Profile: React.FC = () => {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        // Verifica se existem erros no formulário
+        const validationErrors = userFormError;
+
+        // Coletando erros para exibir
+        const errors = Object.values(validationErrors).filter(error => error !== "");
+
+        if (errors.length > 0) {
+            // Se houver erros, mostrar uma mensagem amigável
+            const errorMessage = errors.join("\n"); // Junta todos os erros em uma string separada por novas linhas
+            alert(`Por favor, corrija os seguintes erros:\n${errorMessage}`);
+            return;
+        }
+
         try {
-            await handleEditProfile();
+            await handleEditProfile(() => setEditing(false));
         } catch (error) {
             if (error instanceof Error) {
                 alert(error.message);
             }
         }
     };
+
+    if (isLoadingUser) {
+        return <LoadingScreen />;
+    }
 
     return (
         <>
@@ -73,20 +118,55 @@ const Profile: React.FC = () => {
                 </ProfilePicture>
                 <Box component='form' onSubmit={handleSubmit} sx={ProfileContainer}>
                     <ProfileInfomation >
+                        <IconButton
+                            onClick={() => setEditing(!editing)}
+                            sx={{
+                                position: 'absolute',
+                                top: 2,
+                                right: 2,
+                            }}
+                        >
+                            <EditOutlined sx={{color: "green"}}/>
+                        </IconButton>
                         <Typography>Nome:</Typography>
-                        <StyledTextField disabled={!editing} name='name' value={userForm.profile.name} onChange={handleChangeUserForm} />
+                        <StyledTextField
+                            disabled={!editing}
+                            name='name'
+                            required
+                            error={!!userFormError.name}
+                            helperText={userFormError.name}
+                            value={userForm.profile.name}
+                            onChange={handleChangeUserForm}
+                        />
                     </ProfileInfomation>
                     <ProfileInfomation>
                         <Typography>E-mail:</Typography>
-                        <StyledTextField disabled value={userForm.email || ''} onChange={handleChangeUserForm} />
+                        <StyledTextField
+                            disabled
+                            name='email'
+                            value={userForm.email}
+                            onChange={handleChangeUserForm}
+                        />
                     </ProfileInfomation>
                     <ProfileInfomation>
                         <Typography>Nome de Usuário:</Typography>
-                        <StyledTextField disabled value={userForm.username || ''} />
+                        <StyledTextField
+                            disabled
+                            value={userForm.username || ''}
+                        />
                     </ProfileInfomation>
                     <ProfileInfomation>
                         <Typography>Gênero:</Typography>
-                        <StyledTextField disabled={!editing} select name='gender' value={userForm.profile.gender || ''} onChange={handleChangeUserForm} >
+                        <StyledTextField
+                            disabled={!editing}
+                            select
+                            required
+                            name='gender'
+                            error={!!userFormError.gender}
+                            helperText={userFormError.gender}
+                            value={userForm.profile.gender || ''}
+                            onChange={handleChangeUserForm}
+                        >
                             <MenuItem value="male">Masculino</MenuItem>
                             <MenuItem value="female">Feminino</MenuItem>
                             <MenuItem value="other">Outro</MenuItem>
@@ -94,7 +174,12 @@ const Profile: React.FC = () => {
                     </ProfileInfomation>
                     <ProfileInfomation>
                         <Typography>Empresa:</Typography>
-                        <StyledTextField disabled={!editing} name='company' value={userForm.profile.company || ''} onChange={handleChangeUserForm} />
+                        <StyledTextField
+                            disabled={!editing}
+                            name='company'
+                            value={userForm.profile.company || ''}
+                            onChange={handleChangeUserForm}
+                        />
                     </ProfileInfomation>
                     <ProfileInfomation>
                         <Typography>Data de Nascimento:</Typography>
@@ -102,6 +187,9 @@ const Profile: React.FC = () => {
                             disabled={!editing}
                             type="date"
                             name="birthDate"
+                            required
+                            error={!!userFormError.birthDate}
+                            helperText={userFormError.birthDate}
                             onChange={handleChangeUserForm}
                             value={userForm.profile.birthDate ? new Date(userForm.profile.birthDate).toISOString().split('T')[0] : ''}
                         />
@@ -110,25 +198,19 @@ const Profile: React.FC = () => {
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: 1 }}>
                         <Button
                             sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                            type={!editing ? 'submit' : undefined} variant="contained" onClick={() => setEditing(!editing)}
+                            variant="contained"
+                            disabled={!editing}
+                            type="submit"
+                            loading={isLoadingUser}
                         >
-                            {!editing ? (
-                                <>
-                                    <EditOutlined />
-                                    Editar
-                                </>
-                            ) : (
-                                <>
-                                    <CheckOutlined />
-                                    Salvar
-                                </>
-                            )}
+                            <CheckOutlined />
+                            Salvar
                         </Button>
                     </Box>
                 </Box>
-            </ProfileScreen>
+            </ProfileScreen >
         </>
     );
-};
+});
 
 export { Profile };

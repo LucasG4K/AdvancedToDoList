@@ -12,12 +12,15 @@ interface TaskContextType {
     isLoadingTasks: boolean;
     page: number;
     totalPages: number;
+    hideCompleted: boolean;
+    search: string,
     setPage: (page: number) => void;
     setSearch: (search: string) => void;
+    setHideCompleted: (hide: boolean) => void;
+    toggleHideComplete: () => void;
     handleSave: (editing: boolean, id: string, taskForm: TaskModel) => void;
     handleChangeStatus: (_id: string, newStatus: TaskStatusModel) => void;
     handleDeleteTask: (_id: string) => void;
-    handleSearch: (title: string) => void;
     countTasks: {
         registered: number;
         inProgress: number;
@@ -39,6 +42,7 @@ const useTasks = () => {
 
 const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useUser();
+    const [hideCompleted, setHideCompleted] = useState<boolean>(false);
     const [search, setSearch] = useState<string>('')
     const [page, setPage] = useState<number>(1);
     const limit = 4;
@@ -86,10 +90,10 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         });
     };
 
-    const isLoadingTasks = useSubscribe('tasks', {limit, skip})();
+    const isLoadingTasks = useSubscribe('tasks', { limit, skip })();
 
-    const handleSearch = (title: string) => {
-        setSearch(title);
+    const toggleHideComplete = () => {
+        setHideCompleted(!hideCompleted);
     }
 
     const { tasks, totalCount, countTasks } = useTracker(() => {
@@ -97,10 +101,12 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         const fetchedTasks = TasksCollection.find(
             {
                 $or: [{ private: false }, { userId: user?._id }],
-                ...(search ? { title: { $regex: search, $options: "i" } } : {})
+                ...(hideCompleted ? { status: { $ne: TaskStatusModel.COMPLETED } } : {}), // Filtra tarefas concluídas
+                ...(search ? { title: { $regex: search, $options: "i" } } : {}) // Filtro de busca
             },
             { sort: { due: -1, createdAt: -1 }, limit, skip }
         ).fetch();
+
 
         const total = TasksCollection.find(
             {
@@ -144,7 +150,7 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             countTasks: countTasks,
         };
 
-    }, [page, search, isLoadingTasks]);
+    }, [page, search, isLoadingTasks, hideCompleted]);
 
     const totalPages = Math.ceil(totalCount / limit);
 
@@ -161,12 +167,15 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         totalPages,
         totalCount,
         countTasks,
+        hideCompleted,
+        search,
+        setHideCompleted,
+        toggleHideComplete,
         setSearch,
         setPage,
         handleSave,
         handleChangeStatus,
         handleDeleteTask,
-        handleSearch
     };
 
     return (

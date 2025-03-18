@@ -12,7 +12,7 @@ interface ITaskListProps {
 
 const TaskList: React.FC<ITaskListProps> = React.memo(({ detailedTable }) => {
 
-    const { tasks, page, totalPages, setPage, setSearch, isLoadingTasks } = useTasks();
+    const { tasks, page, totalPages, setHideCompleted, setPage, setSearch, isLoadingTasks } = useTasks();
     const editTaskNavigate = useNavigate();
 
     const decodeStatus = (status: TaskStatusModel): { status: string, color: string } => {
@@ -31,6 +31,7 @@ const TaskList: React.FC<ITaskListProps> = React.memo(({ detailedTable }) => {
     React.useEffect(() => {
         if (!detailedTable) {
             setPage(1);
+            setHideCompleted(false);
             setSearch('');
         }
     }, [detailedTable]);
@@ -43,7 +44,6 @@ const TaskList: React.FC<ITaskListProps> = React.memo(({ detailedTable }) => {
     if (isLoadingTasks) {
         return <LoadingScreen />
     }
-
 
     return (
         <Box component={Paper} sx={{ width: '95%', margin: 'auto', marginTop: 2, overflowX: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -126,7 +126,6 @@ const TaskList: React.FC<ITaskListProps> = React.memo(({ detailedTable }) => {
                     onChange={(_: React.ChangeEvent<unknown>, value: number) => setPage(value)}
                 />
             }
-
         </Box>
     );
 });

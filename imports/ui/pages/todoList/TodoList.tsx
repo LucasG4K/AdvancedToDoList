@@ -1,26 +1,21 @@
 import React, { ChangeEvent } from "react";
-import { Box, Button, InputAdornment, TextField } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, FormGroup, InputAdornment, TextField } from "@mui/material";
 import { MyAppBar } from "../../components/myAppBar";
 import { TaskList } from "./components/taskList";
 import { AddCircleOutlineOutlined, ArrowBackOutlined, SearchOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../../providers/userProvider";
 import { useTasks } from "../../../providers/taskProvider";
-import { LoadingScreen } from "../../components/loadingScreen";
 
 const TodoList: React.FC = React.memo(() => {
     const { user } = useUser();
-    const { isLoadingTasks, handleSearch } = useTasks();
-
-    if (isLoadingTasks) {
-        return <LoadingScreen />
-    }
+    const { setSearch, search, toggleHideComplete, hideCompleted } = useTasks();
 
     const navigate = useNavigate();
 
     return (
         <>
-            <MyAppBar title="TAREFAS" />
+            <MyAppBar title="LISTA DE TAREFAS" />
             <Box sx={{ display: "flex", justifyContent: "space-between", m: 2 }}>
                 <Button
                     startIcon={<ArrowBackOutlined />}
@@ -38,11 +33,23 @@ const TodoList: React.FC = React.memo(() => {
                 </Button>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'center', width: '50vw', mx: 'auto' }}>
-                <TextField onChange={(event: ChangeEvent<HTMLInputElement>) => handleSearch(event.target.value)} fullWidth label={'Pesquisar Tarefa'} InputProps={{
-                    startAdornment: (<InputAdornment position="start">
-                        <SearchOutlined />
-                    </InputAdornment>)
-                }} />
+                <TextField
+                    fullWidth
+                    label={'Pesquisar Tarefa'}
+                    value={search}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value)}
+                    InputProps={{
+                        startAdornment: (<InputAdornment position="start">
+                            <SearchOutlined />
+                        </InputAdornment>)
+                    }} />
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mx: 'auto', pt: 2 }}>
+                <FormGroup sx={{ gap: 1 }} onChange={toggleHideComplete} >
+                    <FormControlLabel
+                        control={<Checkbox checked={hideCompleted} />}
+                        label='Ocultar Tarefas Concluídas' />
+                </FormGroup>
             </Box>
             <TaskList detailedTable={true} userId={user!._id} />
         </>

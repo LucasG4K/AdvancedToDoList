@@ -15,7 +15,8 @@ const ProfileContainer = {
     flexDirection: 'column',
     borderRadius: '8px',
     boxSizing: 'content-box',
-    border: 'solid #000000 2px'
+    border: 'solid #000000 2px',
+    position: 'relative',
 };
 
 const ProfileInfomation = styled(Box)(() => ({

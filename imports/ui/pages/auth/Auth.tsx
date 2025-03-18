@@ -7,66 +7,51 @@ import { useUser } from '/imports/providers/userProvider';
 
 export const Auth = () => {
 
-    const { handleLogin, handleSignUp, userForm, setUserForm, handleChangeUserForm } = useUser()
+    const { handleLogin, handleSignUp, userForm, setUserForm, handleChangeUserForm, clearUser } = useUser()
 
-    const [isLogin, setIsLogin] = useState<Boolean>(true);
+    const [isLogin, setIsLogin] = useState<boolean>(true);
 
     const [password, setPassword] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState<string>('');
 
-    const validate = (): { [key: string]: string } => {
-        const errors: { [key: string]: string } = {};
+    const [userFormError, setUserFormError] = useState({
+        email: "",
+        password: "",
+        confirmPassword: "",
+        gender: "",
+        name: "",
+        birthDate: "",
+    });
 
-        // Validação de email (regex simples)
-        const emailRegex = /^(.+)@[\w]+\.\w+$/;
-        if (!emailRegex.test(userForm.email)) {
-            errors.email = 'Email inválido.';
-        }
+    const emailRegex = /^(.+)@[\w]+\.\w+$/;
 
-        // Validação de senha (mínimo 6 caracteres)
-        if (!isLogin && password.length < 6) {
-            errors.password = 'A senha deve ter pelo menos 6 caracteres.';
-        }
+    React.useEffect(() => {
+        const genderOptions = ['male', 'female', 'other']; // Gêneros válidos
+        setUserFormError({
+            email: userForm.email === "" || emailRegex.test(userForm.email) ? "" : "E-mail inválido",
+            password: password === "" || password.length >= 6 ? "" : "A senha deve ter pelo menos 6 caracteres",
+            confirmPassword: confirmPassword === "" || confirmPassword === password ? "" : "As senhas não coincidem",
+            name: userForm.profile.name === "" || userForm.profile.name.length > 2 ? "" : "O nome deve ter pelo menos 3 caracteres",
+            birthDate: userForm.profile.birthDate === "" || userForm.profile.birthDate <= new Date() ? "" : "Data inválida",
+            gender: userForm.profile.gender === "" || genderOptions.includes(userForm.profile.gender) ? "" : "Gênero não atribuído", // Validação do gênero
+        });
+    }, [userForm, password, confirmPassword]); // O efeito será executado sempre que o userForm mudar
 
-        // Validação de confirmação de senha
-        if (!isLogin && password !== confirmPassword) {
-            errors.confirmPassword = 'As senhas não coincidem.';
-        }
-
-        // Validação de nome (obrigatório no cadastro)
-        if (!isLogin && !userForm.profile.name) {
-            errors.name = 'O nome é obrigatório.';
-        }
-
-        // Validação de nascimento (opcional, mas você pode adicionar algum critério)
-        if (!isLogin && !userForm.profile.birthDate) {
-            errors.birthDate = 'A data de nascimento é obrigatória.';
-        }
-
-        // Validação de empresa (obrigatório no cadastro)
-        if (!isLogin && !userForm.profile.company) {
-            errors.company = 'A empresa é obrigatória.';
-        }
-
-        // Validação de gênero (obrigatório no cadastro)
-        if (!isLogin && userForm.profile.gender === 'other') {
-            errors.gender = 'Selecione um gênero.';
-        }
-
-        return errors;
-    }
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        const validationErrors = validate();
+        // Verifica se existem erros no formulário
+        const validationErrors = userFormError;
 
-        // Se houver erros, mostrar na interface e impedir o envio do formulário
-        if (Object.keys(validationErrors).length > 0) {
-            // Exibir os erros como mensagem
-            for (const error in validationErrors) {
-                alert(validationErrors[error]);
-            }
+        // Coletando erros para exibir
+        const errors = Object.values(validationErrors).filter(error => error !== "");
+
+        if (errors.length > 0) {
+            console.log(errors)
+            // Se houver erros, mostrar uma mensagem amigável
+            const errorMessage = errors.join("\n"); // Junta todos os erros em uma string separada por novas linhas
+            alert(`Por favor, corrija os seguintes erros:\n${errorMessage}`);
             return;
         }
 
@@ -88,7 +73,6 @@ export const Auth = () => {
                 }
             }
         }
-
         setPassword('');
         setConfirmPassword('');
     };
@@ -108,8 +92,8 @@ export const Auth = () => {
                         {/* NOME */}
                         {!isLogin && (
                             <TextField
-                                error={!!validate().name}
-                                helperText={validate().name || ''}
+                                error={!!userFormError.name}
+                                helperText={userFormError.name}
                                 label="Nome"
                                 name="name"
                                 fullWidth
@@ -122,8 +106,8 @@ export const Auth = () => {
 
                         {/* EMAIL */}
                         <TextField
-                            error={!!validate().email}
-                            helperText={validate().email || ''}
+                            error={!!userFormError.email}
+                            helperText={userFormError.email}
                             label="Email"
                             name="email"
                             fullWidth
@@ -135,30 +119,30 @@ export const Auth = () => {
 
                         {/* SENHA */}
                         <TextField
-                            error={!!validate().password}
-                            helperText={validate().password || ''}
+                            error={!!userFormError.password}
+                            helperText={userFormError.password}
                             type="password"
                             label="Senha"
                             name="password"
                             fullWidth
                             required
                             value={password}
-                            onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value.trim())}
                             sx={{ mb: 2 }}
                         />
 
                         {/* CONFIRMAR SENHA */}
                         {!isLogin && (
                             <TextField
-                                error={!!validate().confirmPassword}
-                                helperText={validate().confirmPassword || ''}
+                                error={!!userFormError.confirmPassword}
+                                helperText={userFormError.confirmPassword}
                                 type="password"
                                 label="Confirmar Senha"
                                 name="confirmPassword"
                                 fullWidth
                                 required
                                 value={confirmPassword}
-                                onChange={(event: ChangeEvent<HTMLInputElement>) => setConfirmPassword(event.target.value)}
+                                onChange={(event: ChangeEvent<HTMLInputElement>) => setConfirmPassword(event.target.value.trim())}
                                 sx={{ mb: 2 }}
                             />
                         )}
@@ -166,31 +150,16 @@ export const Auth = () => {
                         {/* DATA DE NASCIMENTO */}
                         {!isLogin && (
                             <TextField
-                                error={!!validate().birthDate}
-                                helperText={validate().birthDate || ''}
+                                error={!!userFormError.birthDate}
+                                helperText={userFormError.birthDate}
                                 label="Data de Nascimento"
                                 name="birthDate"
                                 type="date"
                                 fullWidth
                                 required
                                 InputLabelProps={{ shrink: true }}
-                                value={userForm.profile.birthDate ? userForm.profile.birthDate.toISOString().split('T')[0] : null} // Formato YYYY-MM-DD
+                                value={userForm.profile.birthDate ? userForm.profile.birthDate.toISOString().split('T')[0] : ''} // Formato YYYY-MM-DD
                                 onChange={(e) => setUserForm({ ...userForm, profile: { ...userForm.profile, birthDate: new Date(e.target.value) } })}
-                                sx={{ mb: 2 }}
-                            />
-                        )}
-
-                        {/* EMPRESA */}
-                        {!isLogin && (
-                            <TextField
-                                error={!!validate().company}
-                                helperText={validate().company || ''}
-                                label="Empresa"
-                                name="company"
-                                fullWidth
-                                required
-                                value={userForm.profile.company}
-                                onChange={handleChangeUserForm}
                                 sx={{ mb: 2 }}
                             />
                         )}
@@ -198,8 +167,8 @@ export const Auth = () => {
                         {/* GÊNERO */}
                         {!isLogin && (
                             <TextField
-                                error={!!validate().gender}
-                                helperText={validate().gender || ''}
+                                error={!!userFormError.gender}
+                                helperText={userFormError.gender}
                                 select
                                 label="Gênero"
                                 name="gender"
@@ -238,7 +207,12 @@ export const Auth = () => {
                                 "&:hover": { cursor: 'pointer' }
                             }
                         }
-                        onClick={() => setIsLogin(!isLogin)}
+                        onClick={() => {
+                            setIsLogin(!isLogin);
+                            clearUser();
+                            setPassword('');
+                            setConfirmPassword('');
+                        }}
                     >
                         {!isLogin ? 'Entrar' : 'Cadastrar'}
                     </Link>

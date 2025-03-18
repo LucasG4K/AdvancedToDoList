@@ -16,9 +16,9 @@ Meteor.methods({
 
     try {
       const userId = Accounts.createUser({
-        username: userData.email.match(/^(.+)@[\w]+\.\w+$/)![1], // regex para extrair o username direto do email -> ex: nome123@email.com -> username=nome123
-        email: userData.email,
-        password: password,
+        username: userData.email.match(/^(.+)@[\w]+\.\w+$/)![1].trim(), // regex para extrair o username direto do email -> ex: nome123@email.com -> username=nome123
+        email: userData.email.trim(),
+        password: password.trim(),
         profile: userData.profile,
       });
 

@@ -22,19 +22,6 @@ const Task: React.FC<ITask> = React.memo(({ editingScreen }) => {
 
     const [editingDisable, setEditingDisable] = useState<boolean>(editingScreen);
 
-    if (isLoadingTasks) {
-        return <LoadingScreen />
-    }
-
-    if (editingScreen && !task) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-                <Typography variant="h6" color="error">
-                    Tarefa não encontrada!
-                </Typography>
-            </Box>
-        );
-    }
 
     const [taskForm, setTaskForm] = useState<TaskModel>({
         userName: task?.userName || '',
@@ -57,6 +44,19 @@ const Task: React.FC<ITask> = React.memo(({ editingScreen }) => {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+
+        const validationErrors = taskFormError;
+
+        // Coletando erros para exibir
+        const errors = Object.values(validationErrors).filter(error => error !== "");
+
+        if (errors.length > 0) {
+            // Se houver erros, mostrar uma mensagem amigável
+            const errorMessage = errors.join("\n"); // Junta todos os erros em uma string separada por novas linhas
+            alert(`Por favor, corrija os seguintes erros:\n${errorMessage}`);
+            return;
+        }
+
         try {
             await handleSave(editingScreen, id!, taskForm);
             navigate(-1);
@@ -119,6 +119,31 @@ const Task: React.FC<ITask> = React.memo(({ editingScreen }) => {
         }
     };
 
+    const [taskFormError, setTaskFormError] = useState({
+        title: '',
+    });
+
+    React.useEffect(() => {
+        setTaskFormError({
+            title: taskForm.title === "" || taskForm.title.length > 1 ? "" : "O título deve ter pelo menos 2 caracteres",
+        });
+    }, [taskForm]); // O efeito será executado sempre que o taskForm mudar
+
+    if (editingScreen && !task) {
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+                <Typography variant="h6" color="error">
+                    Tarefa não encontrada!
+                </Typography>
+            </Box>
+        );
+    }
+
+    if (isLoadingTasks) {
+        return <LoadingScreen />
+    }
+
+
     return (
 
         <TaskScreen>
@@ -168,8 +193,8 @@ const Task: React.FC<ITask> = React.memo(({ editingScreen }) => {
                     <TextField
                         disabled={editingDisable}
                         required
-                        error={taskForm.title.length < 3}
-                        helperText={taskForm.title.length < 3 ? 'Título pequeno demais' : ''}
+                        error={!!taskFormError.title}
+                        helperText={taskFormError.title}
                         sx={{ width: '60%' }}
                         label='Título'
                         name='title'

@@ -8,11 +8,11 @@ interface UserContextType {
     isLoadingUser: boolean;
     userForm: UserModel;
     setUserForm: (user: UserModel) => void;
-    handleEditProfile: () => void;
-    handleChangeUserForm: (event: ChangeEvent<HTMLInputElement>) => void;
-    clearUser: () => void; 
     handleLogin: (email: string, password: string) => void;
     handleSignUp: (user: UserModel, password: string) => void;
+    handleEditProfile:  (callback?: () => void) => void;
+    handleChangeUserForm: (event: ChangeEvent<HTMLInputElement>) => void;
+    clearUser: () => void;
     handleChangeProfilePic: (base64Image: string) => void;
 }
 
@@ -41,10 +41,10 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             username: meteorUser.username || "",
             profile: {
                 name: profile.name || "",
-                birthDate: profile.birthDate ? new Date(profile.birthDate) : null,
+                birthDate: profile.birthDate ? new Date(profile.birthDate) : '',
                 avatar: profile.avatar || "",
                 company: profile.company || "",
-                gender: profile.gender || null,
+                gender: profile.gender || '',
             },
             createdAt: meteorUser?.createdAt || new Date(),
         } as UserModel;
@@ -94,17 +94,21 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         });
     }
 
-    const handleEditProfile = async (): Promise<void> => {
-        return await new Promise<void>((resolve, reject) => {
-            Meteor.call('user.update', userForm.profile), (error: Meteor.Error) => {
+    const handleEditProfile = async (callback?: () => void): Promise<void> => {
+        return new Promise<void>((resolve, reject) => {
+            Meteor.call('user.update', userForm.profile, (error: Meteor.Error) => {
                 if (error) {
                     reject(new Error('Erro ao atualizar perfil: ' + error.message));
                 } else {
                     resolve();
+                    if (callback) {
+                        callback(); // Executa o callback após a atualização bem-sucedida
+                    }
                 }
-            }
+            });
         });
-    }
+    };
+
 
     const [userForm, setUserForm] = useState<UserModel>({
         _id: user?._id || '',
@@ -112,13 +116,13 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         username: user?.username || '',
         profile: {
             name: user?.profile.name || '',
-            birthDate: user?.profile.birthDate || null,
+            birthDate: user?.profile.birthDate || '',
             avatar: user?.profile.avatar || '',
             company: user?.profile.company || '',
-            gender: user?.profile.gender || null
+            gender: user?.profile.gender || ''
         },
         createdAt: user?.createdAt || new Date(),
-    } as UserModel); 
+    } as UserModel);
 
     React.useEffect(() => {
         if (user && JSON.stringify(user) !== JSON.stringify(userForm)) {
@@ -151,10 +155,10 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             username: '',
             profile: {
                 name: '',
-                birthDate: null,
+                birthDate: "",
                 avatar: '',
                 company: '',
-                gender: null
+                gender: ""
             },
             createdAt: new Date(),
         })
