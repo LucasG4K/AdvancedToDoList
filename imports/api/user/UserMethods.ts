@@ -3,7 +3,7 @@
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
 import { UserModel, UserModelProfile } from "./UserModel";
-import { check } from 'meteor/check';
+import { check } from "meteor/check";
 
 Meteor.methods({
   "user.create"(userData: UserModel, password: string) {
@@ -19,7 +19,10 @@ Meteor.methods({
         username: userData.email.match(/^(.+)@[\w]+\.\w+$/)![1].trim(), // regex para extrair o username direto do email -> ex: nome123@email.com -> username=nome123
         email: userData.email.trim(),
         password: password.trim(),
-        profile: userData.profile,
+        profile: {
+          ...userData.profile,
+          name: userData.profile.name.trim(),
+        },
       });
 
       return userId;
@@ -30,7 +33,19 @@ Meteor.methods({
 
   "user.update"(profile: UserModelProfile) {
     if (!this.userId) throw new Meteor.Error("not-authorized");
-    Meteor.users.updateAsync(this.userId, { $set: { profile } });
+    Meteor.users.updateAsync(this.userId, {
+      $set: {
+        profile: {
+          ...profile,
+          name: profile.name.trim(),
+        },
+      },
+    });
+  },
+
+  "user.changePassword"(oldPassword: string, newPassword: string) {
+    if (!this.userId) throw new Meteor.Error("not-authorized");
+    Accounts.changePassword(oldPassword, newPassword);
   },
 
   async "user.updateAvatar"(base64Image: string) {

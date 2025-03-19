@@ -4,11 +4,9 @@ import { MyAppBar } from "../../components/myAppBar";
 import { TaskList } from "./components/taskList";
 import { AddCircleOutlineOutlined, ArrowBackOutlined, SearchOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "../../../providers/userProvider";
 import { useTasks } from "../../../providers/taskProvider";
 
 const TodoList: React.FC = React.memo(() => {
-    const { user } = useUser();
     const { setSearch, search, toggleHideComplete, hideCompleted } = useTasks();
 
     const navigate = useNavigate();
@@ -51,7 +49,7 @@ const TodoList: React.FC = React.memo(() => {
                         label='Ocultar Tarefas Concluídas' />
                 </FormGroup>
             </Box>
-            <TaskList detailedTable={true} userId={user!._id} />
+            <TaskList detailedTable={true} />
         </>
     );
 });

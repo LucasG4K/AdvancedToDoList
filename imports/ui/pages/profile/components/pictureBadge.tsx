@@ -2,13 +2,13 @@ import { DeleteOutline, EditOutlined } from '@mui/icons-material';
 import { Avatar, Box, IconButton } from '@mui/material';
 import React, { useState } from 'react';
 
-interface IBadgeProfile {
+interface IBadgeProfileProps {
     handleImageUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
     handleImageRemove: () => void;
     avatarSrc: string;
 }
 
-const BadgeProfile: React.FC<IBadgeProfile> = ({ handleImageUpload, handleImageRemove, avatarSrc }) => {
+const BadgeProfile: React.FC<IBadgeProfileProps> = ({ handleImageUpload, handleImageRemove, avatarSrc }) => {
 
     const [hover, setHover] = useState(false);
     return (

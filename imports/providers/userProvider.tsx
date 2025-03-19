@@ -2,6 +2,7 @@ import React, { ChangeEvent, createContext, ReactNode, useContext, useState } fr
 import { UserModel, UserModelProfile } from "../api/User/UserModel";
 import { useSubscribe, useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
+import { Accounts } from "meteor/accounts-base";
 
 interface UserContextType {
     user: UserModel | null;
@@ -10,7 +11,8 @@ interface UserContextType {
     setUserForm: (user: UserModel) => void;
     handleLogin: (email: string, password: string) => void;
     handleSignUp: (user: UserModel, password: string) => void;
-    handleEditProfile:  (callback?: () => void) => void;
+    handleChangePassword: (oldPassword: string, newPassword: string, callback?: () => void) => void;
+    handleEditProfile: (callback?: () => void) => void;
     handleChangeUserForm: (event: ChangeEvent<HTMLInputElement>) => void;
     clearUser: () => void;
     handleChangeProfilePic: (base64Image: string) => void;
@@ -82,6 +84,21 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         });
     }
 
+    const handleChangePassword = async (oldPassword: string, newPassword: string, callback?: () => void) => {
+        return (
+            Accounts.changePassword(oldPassword, newPassword, (error) => {
+                if (error) {
+                    alert(new Error("Erro ao atualizar senha: " + error.message));
+                } else {
+                    if (callback) {
+                        callback(); // Executa o callback após a atualização bem-sucedida
+                    }
+                }
+            })
+        );
+    };
+
+
     const handleChangeProfilePic = async (base64Image: string): Promise<void> => {
         return await new Promise<void>((resolve, reject) => {
             Meteor.call('user.updateAvatar', base64Image, (error: Meteor.Error) => {
@@ -101,6 +118,7 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                     reject(new Error('Erro ao atualizar perfil: ' + error.message));
                 } else {
                     resolve();
+                    setUserForm(user!);
                     if (callback) {
                         callback(); // Executa o callback após a atualização bem-sucedida
                     }
@@ -108,7 +126,6 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             });
         });
     };
-
 
     const [userForm, setUserForm] = useState<UserModel>({
         _id: user?._id || '',
@@ -125,7 +142,7 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     } as UserModel);
 
     React.useEffect(() => {
-        if (user && JSON.stringify(user) !== JSON.stringify(userForm)) {
+        if (user && (JSON.stringify(user) !== JSON.stringify(userForm))) {
             setUserForm(user);
         }
     }, [user]);
@@ -137,13 +154,13 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                 ...userForm,
                 profile: {
                     ...userForm.profile,
-                    [name]: value
+                    [name]: name === 'birthDate' ? !isNaN(Date.parse(value)) ? new Date(value) : undefined : value
                 }
             })
         } else {
             setUserForm({
                 ...userForm,
-                [name]: value
+                [name]: value.trim()
             });
         }
     }
@@ -173,6 +190,7 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         clearUser,
         handleLogin,
         handleSignUp,
+        handleChangePassword,
         handleChangeProfilePic,
         handleEditProfile,
     }

@@ -7,7 +7,6 @@ import { LoadingScreen } from "/imports/ui/components/loadingScreen";
 
 interface ITaskListProps {
     detailedTable: boolean;
-    userId?: string
 }
 
 const TaskList: React.FC<ITaskListProps> = React.memo(({ detailedTable }) => {

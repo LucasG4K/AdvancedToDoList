@@ -18,9 +18,10 @@ interface TaskContextType {
     setSearch: (search: string) => void;
     setHideCompleted: (hide: boolean) => void;
     toggleHideComplete: () => void;
-    handleSave: (editing: boolean, id: string, taskForm: TaskModel) => void;
+    handleCreateTask: (taskForm: TaskModel, callBack?: () => void) => void;
+    handleEditTask: (id: string, taskForm: TaskModel, callBack?: () => void) => void;
     handleChangeStatus: (_id: string, newStatus: TaskStatusModel) => void;
-    handleDeleteTask: (_id: string) => void;
+    handleDeleteTask: (_id: string, callBack?: () => void) => void;
     countTasks: {
         registered: number;
         inProgress: number;
@@ -48,27 +49,36 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     const limit = 4;
     const skip = (page - 1) * limit;
 
-    const handleSave = (editing: boolean, id: string, taskForm: TaskModel): Promise<void> => {
+    const handleEditTask = (id: string, taskForm: TaskModel, callBack?: () => void): Promise<void> => {
         return new Promise((resolve, reject) => {
-            if (editing) {
-                Meteor.call('task.edit', id, taskForm, (error: Meteor.Error) => {
-                    if (error) {
-                        reject(new Error('Erro ao atualizar: ' + error.message));
-                    } else {
-                        resolve();
-                    }
-                });
-            } else {
-                Meteor.call('task.insert', taskForm, (error: Meteor.Error) => {
-                    if (error) {
-                        reject(new Error('Erro ao criar: ' + error.message));
-                    } else {
-                        resolve();
-                    }
-                });
-            }
+            Meteor.call('task.edit', id, taskForm, (error: Meteor.Error) => {
+                if (error) {
+                    reject(new Error('Erro ao atualizar: ' + error.message));
+                } else {
+                    resolve();
+                    if (callBack)
+                        callBack();
+                }
+            });
+
+        })
+    };
+
+    const handleCreateTask = (taskForm: TaskModel, callBack?: () => void): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            Meteor.call('task.insert', taskForm, (error: Meteor.Error) => {
+                if (error) {
+                    reject(new Error('Erro ao criar: ' + error.message));
+                } else {
+                    resolve();
+                    if (callBack)
+                        callBack();
+                }
+            });
         });
     };
+
+
 
     const handleChangeStatus = (_id: string, newStatus: TaskStatusModel): Promise<void> => {
         return new Promise((resolve, reject) => {
@@ -82,13 +92,19 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         });
     };
 
-    const handleDeleteTask = (_id: string) => {
-        Meteor.call('task.delete', { _id }, (error: Meteor.Error) => {
-            if (error) {
-                alert("Erro ao atualizar ao remover tarefa: " + error.reason);
-            }
+    const handleDeleteTask = (_id: string, callBack?: () => void): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            Meteor.call('task.delete', { _id }, (error: Meteor.Error) => {
+                if (error) {
+                    reject(new Error('Erro ao remover tarefa: ' + error.message));
+                } else {
+                    resolve();
+                    if (callBack)
+                        callBack();
+                }
+            });
         });
-    };
+    }
 
     const isLoadingTasks = useSubscribe('tasks', { limit, skip })();
 
@@ -170,7 +186,8 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         toggleHideComplete,
         setSearch,
         setPage,
-        handleSave,
+        handleCreateTask,
+        handleEditTask,
         handleChangeStatus,
         handleDeleteTask,
     };

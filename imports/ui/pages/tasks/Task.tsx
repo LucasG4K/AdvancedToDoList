@@ -8,6 +8,7 @@ import MyDialog from "../../components/myDialog";
 import { Header, TaskScreen } from "./taskStyles";
 import { useUser } from "/imports/providers/userProvider";
 import { LoadingScreen } from "../../components/loadingScreen";
+import { MySnackBar } from "../../components/mySnackBar";
 
 interface ITask {
     editingScreen: boolean;
@@ -15,13 +16,18 @@ interface ITask {
 
 const Task: React.FC<ITask> = React.memo(({ editingScreen }) => {
 
-    const { tasks, isLoadingTasks, handleSave, handleDeleteTask } = useTasks();
+    const { tasks, isLoadingTasks, handleCreateTask, handleEditTask, handleDeleteTask } = useTasks();
     const { user } = useUser();
     const { id } = useParams(); // id deve ser o mesmo nome da rota definida no App.tsx
     const task = editingScreen ? tasks.find(value => value._id === id) : undefined;
 
     const [editingDisable, setEditingDisable] = useState<boolean>(editingScreen);
+    const [popSnackBarUp, setPopSnackBarUp] = useState<boolean>(false);
+    const [snackBarMessage, setSnackBarMessage] = useState<string>('');
+    const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+    const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
+    const navigate = useNavigate();
 
     const [taskForm, setTaskForm] = useState<TaskModel>({
         userName: task?.userName || '',
@@ -58,8 +64,11 @@ const Task: React.FC<ITask> = React.memo(({ editingScreen }) => {
         }
 
         try {
-            await handleSave(editingScreen, id!, taskForm);
-            navigate(-1);
+            if (editingScreen) {
+                await handleEditTask(id!, taskForm, handleSaveSuccess);
+            } else {
+                await handleCreateTask(taskForm, handleSaveSuccess)
+            }
         } catch (error) {
             if (error instanceof Error) {
                 alert(error.message);
@@ -77,22 +86,38 @@ const Task: React.FC<ITask> = React.memo(({ editingScreen }) => {
         });
     };
 
-    const navigate = useNavigate();
-    const [dialogOpen, setDialogOpen] = useState(false);
-
-    const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-
     const handleOpenDialog = (_id: string) => {
         setSelectedTaskId(_id);
         setDialogOpen(true);
     };
 
     const handleConfirmDelete = () => {
-        handleDeleteTask(selectedTaskId!)
-        setDialogOpen(false);
-        navigate('/todo-list', { replace: true });
+        handleDeleteTask(selectedTaskId!, handleDeleteSuccess);
     };
 
+    const handleSaveSuccess = () => {
+        setSnackBarMessage(editingScreen ? 'alterada com sucesso' : 'criada com sucesso');
+        setEditingDisable(true);
+        setPopSnackBarUp(true);
+
+        if (!editingScreen) {
+            setTimeout(() => {
+                navigate(-1);
+            }, 2000);
+        }
+    };
+
+
+    const handleDeleteSuccess = () => {
+        setDialogOpen(false);
+        setSnackBarMessage('excluída');
+        setEditingDisable(true);
+        setPopSnackBarUp(true);
+
+        setTimeout(() => {
+            navigate(-1);
+        }, 2000);
+    }
 
     const decodeStatus = (status: TaskStatusModel): { status: string; color: string; options: Array<TaskStatusModel> } => {
         switch (status) {
@@ -129,7 +154,7 @@ const Task: React.FC<ITask> = React.memo(({ editingScreen }) => {
         });
     }, [taskForm]); // O efeito será executado sempre que o taskForm mudar
 
-    if (editingScreen && !task) {
+    if (editingScreen && !task && !popSnackBarUp) {
         return (
             <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
                 <Typography variant="h6" color="error">
@@ -296,7 +321,12 @@ const Task: React.FC<ITask> = React.memo(({ editingScreen }) => {
                     </Button>
                 </Box>
             </Box>
-
+            <MySnackBar
+                open={popSnackBarUp}
+                message={`Tarefa ${snackBarMessage}!`}
+                severity={snackBarMessage === 'excluída' ? "warning" : 'success'}
+                onClose={() => setPopSnackBarUp(false)}
+            />
         </TaskScreen>
 
     );

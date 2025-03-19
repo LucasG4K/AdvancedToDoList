@@ -7,7 +7,7 @@ import { useUser } from '/imports/providers/userProvider';
 
 export const Auth = () => {
 
-    const { handleLogin, handleSignUp, userForm, setUserForm, handleChangeUserForm, clearUser } = useUser()
+    const { handleLogin, handleSignUp, userForm, handleChangeUserForm, clearUser } = useUser()
 
     const [isLogin, setIsLogin] = useState<boolean>(true);
 
@@ -23,6 +23,14 @@ export const Auth = () => {
         birthDate: "",
     });
 
+    const transformDate = (date: Date | string): Date | undefined => {
+        if (date instanceof Date) {
+            const temp = date.toISOString().split('T')[0];
+            const formattedDate = new Date(`${temp.split('-')[0]}/${temp.split('-')[1]}/${temp.split('-')[2]}`);
+            return formattedDate;
+        } return undefined;
+    }
+
     const emailRegex = /^(.+)@[\w]+\.\w+$/;
 
     React.useEffect(() => {
@@ -32,11 +40,10 @@ export const Auth = () => {
             password: password === "" || password.length >= 6 ? "" : "A senha deve ter pelo menos 6 caracteres",
             confirmPassword: confirmPassword === "" || confirmPassword === password ? "" : "As senhas não coincidem",
             name: userForm.profile.name === "" || userForm.profile.name.length > 2 ? "" : "O nome deve ter pelo menos 3 caracteres",
-            birthDate: userForm.profile.birthDate === "" || userForm.profile.birthDate <= new Date() ? "" : "Data inválida",
+            birthDate: userForm.profile.birthDate === "" || transformDate(userForm.profile.birthDate)! <= new Date() ? "" : "Data inválida",
             gender: userForm.profile.gender === "" || genderOptions.includes(userForm.profile.gender) ? "" : "Gênero não atribuído", // Validação do gênero
         });
     }, [userForm, password, confirmPassword]); // O efeito será executado sempre que o userForm mudar
-
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -65,7 +72,7 @@ export const Auth = () => {
             }
         } else {
             try {
-                await handleSignUp(userForm, password);
+                await handleSignUp(userForm, password,);
                 await handleLogin(userForm.email, password);
             } catch (error) {
                 if (error instanceof Error) {
@@ -159,7 +166,7 @@ export const Auth = () => {
                                 required
                                 InputLabelProps={{ shrink: true }}
                                 value={userForm.profile.birthDate ? userForm.profile.birthDate.toISOString().split('T')[0] : ''} // Formato YYYY-MM-DD
-                                onChange={(e) => setUserForm({ ...userForm, profile: { ...userForm.profile, birthDate: new Date(e.target.value) } })}
+                                onChange={handleChangeUserForm}
                                 sx={{ mb: 2 }}
                             />
                         )}
