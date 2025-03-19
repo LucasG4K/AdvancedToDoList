@@ -98,22 +98,19 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
     const { tasks, totalCount, countTasks } = useTracker(() => {
 
+        const queryFilter = {
+            $or: [{ private: false }, { userId: user?._id }],
+            ...(hideCompleted ? { status: { $ne: TaskStatusModel.COMPLETED } } : {}),
+            ...(search ? { title: { $regex: search, $options: "i" } } : {}),
+        };
+
         const fetchedTasks = TasksCollection.find(
-            {
-                $or: [{ private: false }, { userId: user?._id }],
-                ...(hideCompleted ? { status: { $ne: TaskStatusModel.COMPLETED } } : {}), // Filtra tarefas concluídas
-                ...(search ? { title: { $regex: search, $options: "i" } } : {}) // Filtro de busca
-            },
+            queryFilter,
             { sort: { due: -1, createdAt: -1 }, limit, skip }
         ).fetch();
 
 
-        const total = TasksCollection.find(
-            {
-                $or: [{ private: false }, { userId: user?._id }],
-                ...(search ? { title: { $regex: search, $options: "i" } } : {})
-            }
-        ).count();
+        const total = TasksCollection.find(queryFilter).count();
 
         const countTasks = {
             registered: TasksCollection.find(

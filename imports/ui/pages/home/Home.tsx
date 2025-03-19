@@ -1,6 +1,6 @@
 import React from 'react';
 import { HomeScreen, Overview, Tasks } from './homeStyles';
-import { CardOverview } from './components/cardOverview/cardOverview';
+import { CardOverview } from './components/cardOverview';
 import { useNavigate } from 'react-router-dom';
 import { MyAppBar } from '../../components/myAppBar';
 import { Button, Typography } from '@mui/material';
